@@ -3,15 +3,10 @@ import pyodbc
 from urllib.parse import quote_plus
 import random
 from datetime import datetime
-connection_string = quote_plus(
-    r"DRIVER={ODBC Driver 18 for SQL Server};"
-    r"SERVER=DESKTOP-HIGKAHM\SQLEXPRESS;"
-    r"DATABASE=NovaPayDB;"
-    r"Trusted_Connection=yes;"
-    r"TrustServerCertificate=yes;"
-)
+from connection import database_connection
 
-engine = create_engine(f"mssql+pyodbc:///?odbc_connect={connection_string}")
+
+engine = database_connection()
 
 customers = [{
     "first_name": "Abdulwarith",
@@ -374,8 +369,11 @@ insert_transactions = text("""
 INSERT INTO Transactions (sender_id, receiver_id, amount, receiver_type, currency, payment_method, transaction_category, transaction_direction, status, reference_number, narration, created_at)
 VALUES (:sender_id, :receiver_id, :amount, :receiver_type, :currency, :payment_method, :transaction_category, :transaction_direction, :status, :reference_number, :narration, :created_at)
 """)
+
 with engine.begin() as conn:
     conn.execute(insert_customers, customers)
     conn.execute(insert_merchants, merchants)
     conn.execute(insert_transactions, transactions)
     print("Database seeded successfully.")
+
+    

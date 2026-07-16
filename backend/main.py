@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from sql_server_database import seed_database,insert_tables
 
 app = FastAPI(
     title="NovaPay API",
@@ -16,8 +17,10 @@ def home():
 
 @app.get("/api/v1/customers")
 def get_customers():
+    select_tables = insert_tables()
     return {
-        "message": "Customers endpoint is working."
+        select_tables
+        
     }
 
 
