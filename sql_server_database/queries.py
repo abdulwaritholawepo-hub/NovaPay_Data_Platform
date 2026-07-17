@@ -2,7 +2,7 @@ from sqlalchemy import text
 
 from sql_server_database.connection import database_engine_connection
 
-def get_customers():
+def get_customers_records():
     engine = database_engine_connection()
     customers_list = []
     with engine.begin() as conn:
