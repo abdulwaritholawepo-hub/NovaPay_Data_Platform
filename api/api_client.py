@@ -23,32 +23,21 @@ def get_customer_data(url=None, timeout=None, maximum_retries=None):
             print("request succesful")
             data = response.json()
             return data
-        
-        except requests.exceptions.HTTPError as errh:
-            last_exception = errh
-            print(f"HHTTP Error occurred: {errh}")
-           
-        except requests.exceptions.ConnectionError as errc:
-            last_exception = errc
-            print(f"connecting Error occurred: {errc}")
-           
-        except requests.exceptions.Timeout as errt:
-            last_exception = errt
-            print(f"Timeout Error occurred: {errt}")
-            
-        except requests.exceptions.JSONDecodeError as errjde:
-            last_exception = errjde
-            print(f"Response payload was not valid JSON: {errjde}")
-            
-        except requests.exceptions.RequestException as err:
+        except (
+            requests.exceptions.HTTPError,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.Timeout,
+            requests.exceptions.JSONDecodeError,
+            requests.exceptions.RequestException,)as err: 
             last_exception = err
-            print(f"An unexpected error occurred: {err}")
-        if attempts == maximum_retries:
-            print("maximum retries reached")
-
-        wait_time = attempts**2
-        print(f"retrying in {wait_time} seconds")
-        time.sleep(wait_time)
+            error_type = type(last_exception).__name__
+            print(f"{error_type} occurred: {last_exception}")
+            if attempts == maximum_retries:
+                print("maximum retries reached")
+            else:
+                wait_time = attempts**2
+                print(f"retrying in {wait_time} seconds")
+                time.sleep(wait_time)
     if last_exception:
         raise last_exception
 
