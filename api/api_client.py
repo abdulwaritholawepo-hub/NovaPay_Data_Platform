@@ -40,6 +40,3 @@ def get_customer_data(url=None, timeout=None, maximum_retries=None):
                 time.sleep(wait_time)
     if last_exception:
         raise last_exception
-
-
-get_customer_data()
