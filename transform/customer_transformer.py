@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import datetime
+from datetime import datetime, date
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from extract.response_validator import validate_customer_data
 
@@ -8,7 +8,7 @@ from extract.response_validator import validate_customer_data
 
 def transform_customers():
     transform_customers_list  = []
-    customer_id_set = set()
+    seen_customer_ids = set()
     validated_customers= validate_customer_data()
     def clean_transform_value(key,val):
         
@@ -46,24 +46,32 @@ def transform_customers():
 
 
     for customer in validated_customers:
+
         customer_transform = {
+
         key: clean_transform_value(key=key,val=value) 
         for key, value in customer.items()
 
             
         }
-        if customer_transform["customer_id"] not in customer_id_set:
-            customer_id_set.add(customer_transform["customer_id"])
-            
+        if customer_transform["customer_id"] not in seen_customer_ids:
+            seen_customer_ids.add(customer_transform["customer_id"])
 
+            full_name = customer_transform["first_name"] + " " + customer_transform["last_name"]
+            customer_transform["full_name"] = full_name
+            age = date.today().year - customer_transform["date_of_birth"].year
+            if (customer_transform["date_of_birth"].month, customer_transform["date_of_birth"].day) <= (date.today().month, date.today().day):
+                age
+            else:
+                age -=  1
+
+            customer_transform["age"] = age
+            transform_customers_list.append(customer_transform)
+            
         else:
             continue
-        transform_customers_list.append(customer_transform)
-        
-    print(customer_id_set)
-    print(len(customer_id_set))
     print(transform_customers_list)
     return transform_customers_list
-        
+    
   
 transform_customers()
