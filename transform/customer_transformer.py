@@ -1,6 +1,6 @@
 import sys
 import os
-from datetime import datetime, date
+from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from extract.response_validator import validate_customer_data
 
@@ -8,11 +8,13 @@ from extract.response_validator import validate_customer_data
 
 def transform_customers():
     transform_customers_list  = []
+    customer_id_set = set()
     validated_customers= validate_customer_data()
     def clean_transform_value(key,val):
         
         if isinstance(val,str):
             val = val.strip()
+           
 
             if key in{"first_name", "last_name"} and val:
                 return val.capitalize()
@@ -34,18 +36,32 @@ def transform_customers():
                 if key == "date_of_birth" and val:
                     val = datetime.strptime(val, "%Y-%m-%d").date()
                 return val
+
             except Exception:
+            
                 raise
+        
+            
         return val
 
 
     for customer in validated_customers:
-        customer_transaform = {
-        key: clean_transform_value(key=key,val=value)
+        customer_transform = {
+        key: clean_transform_value(key=key,val=value) 
         for key, value in customer.items()
-    
+
+            
         }
-        transform_customers_list.append(customer_transaform)
+        if customer_transform["customer_id"] not in customer_id_set:
+            customer_id_set.add(customer_transform["customer_id"])
+            
+
+        else:
+            continue
+        transform_customers_list.append(customer_transform)
+        
+    print(customer_id_set)
+    print(len(customer_id_set))
     print(transform_customers_list)
     return transform_customers_list
         
