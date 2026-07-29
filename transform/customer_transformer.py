@@ -9,6 +9,7 @@ def transform_customers():
     INVALID_EMAIL_ADDRESS = "Invalid email address"
     INVALID_ACCOUNT_NUMBER = "Invalid account number"
     INVALID_CUSTOMER_ID = "Invalid customer ID"
+    INVALID_AGE = "Invalid Age"
     gmail_operator = "@"
     transform_customers_list  = []
     seen_customer_ids = set()
@@ -17,14 +18,20 @@ def transform_customers():
     }
     validated_customers= validate_customer_data()
     def clean_transform_value(key,val):
-        if key == "customer_id" and val:
-                if not val:
-                    return None
+        if key == "customer_id":
+            if val is None:
+                return None
+
+            if isinstance(val, bool):
+                return INVALID_CUSTOMER_ID
+            
             if not isinstance(val,int):
                 return INVALID_CUSTOMER_ID
 
-            if val < 0:
+            if val <= 0:
                 return INVALID_CUSTOMER_ID
+            return val
+        
         if key == "wallet_balance":
                 
             if val is None:
@@ -178,6 +185,16 @@ def transform_customers():
                 age = date.today().year - customer_transform["date_of_birth"].year
                 if (customer_transform["date_of_birth"].month, customer_transform["date_of_birth"].day) > (date.today().month, date.today().day):
                     age -= 1
+
+                if age is None:
+                   customer_transform["age"] = "Unknown"
+                elif age < 0:
+                    customer_transform["age"] = INVALID_AGE
+                elif age > 120:
+                    customer_transform["age"] = INVALID_AGE
+                elif 0 <= age <= 120:
+                    customer_transform["age"] = age
+                
                
                 customer_transform["age"] = age
 
@@ -198,6 +215,12 @@ def transform_customers():
                    customer_segment = "Unknown"
                 
                 customer_transform["customer_segment"] = customer_segment
+
+                
+
+
+
+
             if not customer_transform["created_at"]:
                 customer_transform["account_tenure_days"] = None
             else:
