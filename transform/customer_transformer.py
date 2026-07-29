@@ -8,6 +8,7 @@ def transform_customers():
     INVALID_PHONE_NUMBER = "Invalid number format"
     INVALID_EMAIL_ADDRESS = "Invalid email address"
     INVALID_ACCOUNT_NUMBER = "Invalid account number"
+    INVALID_CUSTOMER_ID = "Invalid customer ID"
     gmail_operator = "@"
     transform_customers_list  = []
     seen_customer_ids = set()
@@ -16,7 +17,14 @@ def transform_customers():
     }
     validated_customers= validate_customer_data()
     def clean_transform_value(key,val):
-        
+        if key == "customer_id" and val:
+                if not val:
+                    return None
+            if not isinstance(val,int):
+                return INVALID_CUSTOMER_ID
+
+            if val < 0:
+                return INVALID_CUSTOMER_ID
         if key == "wallet_balance":
                 
             if val is None:
@@ -46,6 +54,8 @@ def transform_customers():
 
             if val in MISSING_VALUES:
                 return None
+
+            
 
             if key == "account_number" and val:
                 val = (
