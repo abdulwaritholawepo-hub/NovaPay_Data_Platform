@@ -7,6 +7,7 @@ from extract.response_validator import validate_customer_data
 def transform_customers():
     INVALID_PHONE_NUMBER = "Invalid number format"
     INVALID_EMAIL_ADDRESS = "Invalid email address"
+    INVALID_ACCOUNT_NUMBER = "Invalid account number"
     gmail_operator = "@"
     transform_customers_list  = []
     seen_customer_ids = set()
@@ -43,10 +44,25 @@ def transform_customers():
         if isinstance(val,str):
             val = val.strip()
 
-            
-
             if val in MISSING_VALUES:
                 return None
+
+            if key == "account_number" and val:
+                val = (
+                    val.replace(" ", "")
+                    .replace("-", "")
+                    .replace(".", "")
+                    .replace(",","")
+                )
+
+                if not val.isdigit():
+                    return INVALID_ACCOUNT_NUMBER
+
+                if len(val) != 10:
+                    return INVALID_ACCOUNT_NUMBER
+                
+                return val
+            
             if key in{"first_name", "last_name"} and val:
                 return val.capitalize()
 
@@ -179,7 +195,7 @@ def transform_customers():
                 customer_transform["account_tenure_days"] = account_tenure_days
             wallet_balance = customer_transform["wallet_balance"] 
             if wallet_balance is None:
-                wallet_segment == "Unknown"
+                wallet_segment = "Unknown"
             elif wallet_balance <= 10000:
                 wallet_segment = "Low Value"
             elif  wallet_balance <= 100000:
