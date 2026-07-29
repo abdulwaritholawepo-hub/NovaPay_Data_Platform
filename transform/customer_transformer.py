@@ -85,8 +85,6 @@ def transform_customers():
                 else:
                     return "Unknown"
 
-            
-            
             if key == "phone_number" and val:
                 val = (
                         val.replace("-", "")
@@ -179,7 +177,22 @@ def transform_customers():
             else:
                 account_tenure_days= (date.today() - customer_transform["created_at"].date()).days
                 customer_transform["account_tenure_days"] = account_tenure_days
-          
+            wallet_balance = customer_transform["wallet_balance"] 
+            if wallet_balance is None:
+                wallet_segment == "Unknown"
+            elif wallet_balance <= 10000:
+                wallet_segment = "Low Value"
+            elif  wallet_balance <= 100000:
+                wallet_segment = "Medium Value"
+            elif wallet_balance <= 500000:
+                wallet_segment = "High Value"
+            else:
+                wallet_segment = "Premium"
+            
+            customer_transform["wallet_segment"] = wallet_segment
+            
+                
+
 
             transform_customers_list.append(customer_transform)
             
