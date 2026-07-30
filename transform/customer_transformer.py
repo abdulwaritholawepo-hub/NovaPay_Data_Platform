@@ -10,9 +10,12 @@ def transform_customers():
     INVALID_ACCOUNT_NUMBER = "Invalid account number"
     INVALID_CUSTOMER_ID = "Invalid customer ID"
     INVALID_AGE = "Invalid Age"
+    INVALID_ACCOUNT_DATE = "Invalid Account Date"
     gmail_operator = "@"
     transform_customers_list  = []
     seen_customer_ids = set()
+    seen_emails = set()
+    seen_account_numbers = set()
     MISSING_VALUES = {
         "", "null", "NULL", "None", "none", "N/A", "n/a", "NA", "na", "-"
     }
@@ -99,7 +102,7 @@ def transform_customers():
                 
                 return val
 
-            if key == "status" and val:
+            if key == "account_status" and val:
                 val = val.lower()
                 if val in {"active", "enabled"}:
                     return "Active"
@@ -165,6 +168,7 @@ def transform_customers():
         for key, value in customer.items()
 
         }
+
         if customer_transform["customer_id"] not in seen_customer_ids:
             seen_customer_ids.add(customer_transform["customer_id"])
 
@@ -174,6 +178,19 @@ def transform_customers():
                 full_name = customer_transform["first_name"] + " " + customer_transform["last_name"]
                 
             customer_transform["full_name"] = full_name
+            if customer_transform["account_number"] not in seen_account_numbers:
+                seen_account_numbers.add(customer_transform["account_number"])
+            else:
+                continue
+
+            if customer_transform["email"] in seen_emails:
+                customer_transform["duplicate_email"] = "Duplicate"
+            else:
+                seen_emails.add(customer_transform["email"])
+                customer_transform["duplicate_email"] = "Unique"
+                email = customer_transform["email"]
+                user_name, domain = email.split(gmail_operator)
+                customer_transform["domain"] = domain
 
             if not customer_transform["date_of_birth"]:
                 age = "Unknown"
@@ -186,47 +203,52 @@ def transform_customers():
                 if (customer_transform["date_of_birth"].month, customer_transform["date_of_birth"].day) > (date.today().month, date.today().day):
                     age -= 1
 
-                if age is None:
-                   customer_transform["age"] = "Unknown"
-                elif age < 0:
+                
+                if age < 0 or age > 120 or age < 18:
                     customer_transform["age"] = INVALID_AGE
-                elif age > 120:
-                    customer_transform["age"] = INVALID_AGE
-                elif 0 <= age <= 120:
+                    customer_transform["customer_segment"] = "Unknown"
+                    customer_transform["Eligibility"] = "Not Eligible"
+                else: 
                     customer_transform["age"] = age
-                
-               
-                customer_transform["age"] = age
-
-                if 0 <= age <= 17:
-                    customer_segment = "Minor"
-                
-                elif 18 <= age <= 25:
-                    customer_segment = "Young Adult"
-
-                elif 26 <= age <= 40:
-                    customer_segment = "Adult"
+                    customer_transform["Eligibility"] = "Eligible"
                     
-                elif 41 <= age <= 60:
-                    customer_segment = "Middle Aged"
-                elif age >= 61:
-                    customer_segment = "Senior"
-                else:
-                   customer_segment = "Unknown"
-                
-                customer_transform["customer_segment"] = customer_segment
+                    if 0 <= age <= 17:
+                        customer_segment = "Minor"
+                    
+                    elif 18 <= age <= 25:
+                        customer_segment = "Young Adult"
 
+                    elif 26 <= age <= 40:
+                        customer_segment = "Adult"
+                        
+                    elif 41 <= age <= 60:
+                        customer_segment = "Middle Aged"
+                    elif 61 <= age <= 120:
+                        customer_segment = "Senior"
+                    else:
+                        customer_segment = "Unknown"
                 
-
+                    customer_transform["customer_segment"] = customer_segment
 
 
 
             if not customer_transform["created_at"]:
                 customer_transform["account_tenure_days"] = None
             else:
-                account_tenure_days= (date.today() - customer_transform["created_at"].date()).days
-                customer_transform["account_tenure_days"] = account_tenure_days
-            wallet_balance = customer_transform["wallet_balance"] 
+                created_at = customer_transform["created_at"] 
+                date_of_birth = customer_transform["date_of_birth"]
+                account_tenure_days= (date.today() - created_at.date()).days
+                if date_of_birth is not None:
+                    if created_at.date() < date_of_birth or created_at.date() > date.today():
+                        customer_transform["account_tenure_days"] = INVALID_ACCOUNT_DATE
+                    else:
+                        customer_transform["account_tenure_days"] = account_tenure_days
+                else:
+                    customer_transform["account_tenure_days"] = account_tenure_days
+            wallet_balance = customer_transform["wallet_balance"]
+            account_status = customer_transform["account_status"]
+            
+    
             if wallet_balance is None:
                 wallet_segment = "Unknown"
             elif wallet_balance <= 10000:
@@ -237,12 +259,37 @@ def transform_customers():
                 wallet_segment = "High Value"
             else:
                 wallet_segment = "Premium"
-            
+                    
             customer_transform["wallet_segment"] = wallet_segment
-            
+            if wallet_balance is None:
+                customer_transform["risk_level"] = "Unknown"
+                customer_transform["risk_flag"] = "Unknown"
+            else:
                 
+                if account_status == "Inactive" and wallet_balance >= 8_000_000:
+                    customer_transform["risk_level"] = "Very High"
 
+                elif account_status == "Inactive" and wallet_balance > 500_000:
+                    customer_transform["risk_level"] = "High"
 
+                elif account_status == "Inactive":
+                    customer_transform["risk_level"] = "Medium"
+
+                elif account_status == "Active" and wallet_balance <= 100_000:
+                    customer_transform["risk_level"] = "Low"
+
+                elif account_status == "Active" and wallet_balance <= 500_000:
+                    customer_transform["risk_level"] = "Medium"
+
+                else:
+                    customer_transform["risk_level"] = "Low"
+
+                if customer_transform["risk_level"] in ("Very High", "High"):
+                    customer_transform["risk_flag"] = "Review Required"
+                else:
+                    customer_transform["risk_flag"] = "Normal"
+
+    
             transform_customers_list.append(customer_transform)
             
         else:
