@@ -17,14 +17,41 @@ def transform_customers():
     seen_emails = set()
     seen_account_numbers = set()
     MISSING_VALUES = {
-        "", "null", "NULL", "None", "none", "N/A", "n/a", "NA", "na", "-"
+    "", "null", "NULL", "None", "none", "N/A", "n/a", "NA", "na", "-"
     }
     validated_customers= validate_customer_data()
+    COLUMN_ORDER = [
+    "customer_id",
+    "account_number",
+    "first_name",
+    "last_name",
+    "full_name",
+    "customer_initials",
+    "gender",
+    "date_of_birth",
+    "age",
+    "is_adult",
+    "Eligibility",
+    "customer_segment",
+    "phone_number",
+    "email",
+    "email_domain",
+    "duplicate_email",
+    "account_status",
+    "wallet_balance",
+    "wallet_segment",
+    "risk_level",
+    "risk_flag",
+    "created_at",
+    "account_tenure_days",
+    "customer_lifetime_stage",
+    ]
     def clean_transform_value(key,val):
         if key == "customer_id":
             if val is None:
                 return None
 
+    
             if isinstance(val, bool):
                 return INVALID_CUSTOMER_ID
             
@@ -34,19 +61,19 @@ def transform_customers():
             if val <= 0:
                 return INVALID_CUSTOMER_ID
             return val
-        
+    
         if key == "wallet_balance":
                 
             if val is None:
                 return None
             
             if isinstance(val, str):
-               val = val.replace(",", "")
-               try:
+                val = val.replace(",", "")
+            try:
                 val = float(val)
-               except ValueError:
-                  return None
-               
+            except ValueError:
+                return None
+            
             if isinstance(val, bool):
                 return None
 
@@ -138,13 +165,13 @@ def transform_customers():
                     
                 if(
                     not val.startswith("+234")
-                   or not val[1:].isdigit()
+                or not val[1:].isdigit()
                     or len(val) != 14
                     ):
-                   return INVALID_PHONE_NUMBER
+                    return INVALID_PHONE_NUMBER
         
                 return val
-   
+
             try:
                 if key == "created_at" and val:
                     val = datetime.strptime(val, "%Y-%m-%dT%H:%M:%S")
@@ -156,7 +183,7 @@ def transform_customers():
             except Exception:
             
                 raise
-           
+        
         return val
 
 
@@ -178,6 +205,13 @@ def transform_customers():
                 full_name = customer_transform["first_name"] + " " + customer_transform["last_name"]
                 
             customer_transform["full_name"] = full_name
+            first_name = customer_transform["first_name"]
+            last_name = customer_transform["last_name"]
+            if not first_name or not last_name:
+                customer_transform["customer_initials"] = "Unknown"
+            else:
+                customer_transform["customer_initials"] = (first_name[0] + last_name[0]).upper()
+
             if customer_transform["account_number"] not in seen_account_numbers:
                 seen_account_numbers.add(customer_transform["account_number"])
             else:
@@ -188,10 +222,15 @@ def transform_customers():
             else:
                 seen_emails.add(customer_transform["email"])
                 customer_transform["duplicate_email"] = "Unique"
-                email = customer_transform["email"]
-                user_name, domain = email.split(gmail_operator)
-                customer_transform["domain"] = domain
 
+            email = customer_transform["email"]
+
+            if email and email != INVALID_EMAIL_ADDRESS:
+                _, domain = email.split(gmail_operator)
+                customer_transform["email_domain"] = domain
+            else:
+                customer_transform["email_domain"] = None
+                
             if not customer_transform["date_of_birth"]:
                 age = "Unknown"
                 customer_segment = "Unknown"
@@ -208,9 +247,14 @@ def transform_customers():
                     customer_transform["age"] = INVALID_AGE
                     customer_transform["customer_segment"] = "Unknown"
                     customer_transform["Eligibility"] = "Not Eligible"
+                    customer_transform["is_adult"] = None
                 else: 
                     customer_transform["age"] = age
                     customer_transform["Eligibility"] = "Eligible"
+                    if age >= 18:
+                        customer_transform["is_adult"] = True
+                    else:
+                        customer_transform["is_adult"] = False
                     
                     if 0 <= age <= 17:
                         customer_segment = "Minor"
@@ -234,21 +278,35 @@ def transform_customers():
 
             if not customer_transform["created_at"]:
                 customer_transform["account_tenure_days"] = None
+                customer_transform["customer_lifetime_stage"] = "Unknown"
             else:
                 created_at = customer_transform["created_at"] 
                 date_of_birth = customer_transform["date_of_birth"]
-                account_tenure_days= (date.today() - created_at.date()).days
-                if date_of_birth is not None:
-                    if created_at.date() < date_of_birth or created_at.date() > date.today():
-                        customer_transform["account_tenure_days"] = INVALID_ACCOUNT_DATE
-                    else:
-                        customer_transform["account_tenure_days"] = account_tenure_days
+                
+                if (date_of_birth is not None) and (created_at.date() < date_of_birth or created_at.date() > date.today()):
+                    
+                    customer_transform["account_tenure_days"] = INVALID_ACCOUNT_DATE
+                    customer_transform["customer_lifetime_stage"] = "Unknown"
                 else:
+                    account_tenure_days= (date.today() - created_at.date()).days
                     customer_transform["account_tenure_days"] = account_tenure_days
+                    if 0 <= account_tenure_days <= 30:
+                        customer_transform["customer_lifetime_stage"] = "New Customer"
+                    elif 31 <= account_tenure_days <= 180:
+                        customer_transform["customer_lifetime_stage"] = "Growing Customer"
+                    elif 181 <= account_tenure_days <= 365:
+                        customer_transform["customer_lifetime_stage"] = "Established Customer"
+                    elif 366 <= account_tenure_days <= 1095:
+                        customer_transform["customer_lifetime_stage"] = "Loyal Customer"
+                    elif account_tenure_days >= 1096:
+                        customer_transform["customer_lifetime_stage"] = "Veteran Customer"
+                    else:
+                        customer_transform["customer_lifetime_stage"] = INVALID_ACCOUNT_DATE
+            
             wallet_balance = customer_transform["wallet_balance"]
             account_status = customer_transform["account_status"]
             
-    
+
             if wallet_balance is None:
                 wallet_segment = "Unknown"
             elif wallet_balance <= 10000:
@@ -289,13 +347,19 @@ def transform_customers():
                 else:
                     customer_transform["risk_flag"] = "Normal"
 
-    
-            transform_customers_list.append(customer_transform)
+            ordered_customer = {
+            column: customer_transform.get(column)
+            for column in COLUMN_ORDER
             
+
+            }
+            transform_customers_list.append(ordered_customer)
+
+        
         else:
             continue
-    print(transform_customers_list)
-    return transform_customers_list
+        print(transform_customers_list)
+        return transform_customers_list
     
-  
+
 transform_customers()
