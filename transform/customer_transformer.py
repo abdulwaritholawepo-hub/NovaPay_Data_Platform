@@ -358,7 +358,7 @@ def transform_customers():
         
         else:
             continue
-        print(transform_customers_list)
+        
         return transform_customers_list
     
 
