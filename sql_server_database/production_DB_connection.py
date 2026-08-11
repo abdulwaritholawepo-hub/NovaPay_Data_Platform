@@ -1,8 +1,8 @@
-
+ 
 from sqlalchemy import create_engine, text
 import pyodbc
 from urllib.parse import quote_plus
-def database_engine_connection():
+def production_database_engine_connection():
     connection_string = quote_plus(
         r"DRIVER={ODBC Driver 18 for SQL Server};"
         r"SERVER=DESKTOP-HIGKAHM\SQLEXPRESS;"
