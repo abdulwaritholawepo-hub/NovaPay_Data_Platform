@@ -22,7 +22,7 @@ COLUMN_ORDER = [
     "date_of_birth",
     "age",
     "is_adult",
-    "Eligibility",
+    "eligibility",
     "customer_segment",
     "phone_number",
     "email",
@@ -37,7 +37,6 @@ COLUMN_ORDER = [
     "account_tenure_days",
     "customer_lifetime_stage",
 ]
-
 
 def clean_transform_value(key, val, missing_values):
 
