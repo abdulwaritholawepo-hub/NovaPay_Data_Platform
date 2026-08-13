@@ -5,7 +5,6 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 from config import api_config
 
-from config import api_config
 
 def get_customer_data(url=None, timeout=None, maximum_retries=None):
     if url is None:

@@ -8,8 +8,8 @@ def get_customers_records():
     with engine.begin() as conn:
         customers = conn.execute(text(
             """
-                SELECT *
-                FROM customers
+            SELECT *
+            FROM customers
             """
         ))
         for customer in customers.mappings():

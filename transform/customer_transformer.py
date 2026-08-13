@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from transform.transform_helpers import (
     calculate_account_tenure,
     get_wallet_segment,
@@ -15,9 +18,7 @@ from transform.transform_helpers import (
 
 )
 from extract.response_validator import validate_customer_data
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 
 
 def transform_customers():
@@ -68,7 +69,7 @@ def transform_customers():
             (
                 customer_transform["age"],
                 customer_transform["is_adult"],
-                customer_transform["Eligibility"],
+                customer_transform["eligibility"],
                 customer_transform["customer_segment"],
             ) = get_customer_age_details(
                 customer_transform["date_of_birth"]
@@ -109,5 +110,5 @@ def transform_customers():
     return transform_customers_list
 
 
-if __name__ == "main":
+if __name__ == "__main__":
     transform_customers()

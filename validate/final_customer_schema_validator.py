@@ -16,7 +16,7 @@ REQUIRED_COLUMNS = [
     "date_of_birth",
     "age",
     "is_adult",
-    "Eligibility",
+    "eligibility",
     "customer_segment",
     "phone_number",
     "email",
@@ -72,7 +72,7 @@ def validate_data_types():
         "date_of_birth": (date, type(None)),
         "age": (int, str),
         "is_adult": (bool, type(None)),
-        "Eligibility": str,
+        "eligibility": str,
         "customer_segment": str,
         "phone_number": (str, type(None)),
         "email": (str, type(None)),
@@ -109,7 +109,7 @@ def required_values():
         "customer_initials",
         "gender",
         "age",
-        "Eligibility",
+        "eligibility",
         "customer_segment",
         "duplicate_email",
         "account_status",
@@ -151,7 +151,7 @@ def required_domains():
             "Duplicate"
         },
 
-        "Eligibility": {
+        "eligibility": {
             "Eligible",
             "Not Eligible"
         }
@@ -285,7 +285,7 @@ def referential_integrity():
         reference_errors = []
         age = customer.get("age")
         is_adult = customer.get("is_adult")
-        eligibility = customer.get("Eligibility")
+        eligibility = customer.get("eligibility")
         if age is not None and is_adult is not None:
 
             if age >= 18 and is_adult is not True:
@@ -294,9 +294,9 @@ def referential_integrity():
                 reference_errors.append("is_adult")
         if age is not None and eligibility is not None:
             if age >= 18 and eligibility != "Eligible":
-                reference_errors.append("Eligibility")
+                reference_errors.append("eligibility")
             elif age < 18 and eligibility != "Not Eligible":
-                reference_errors.append("Eligibility")
+                reference_errors.append("eligibility")
         wallet_balance = customer.get("wallet_balance")
         wallet_segment = customer.get("wallet_segment")
         if wallet_balance is None and wallet_segment != "Unknown":

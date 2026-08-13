@@ -1,12 +1,11 @@
-from sqlalchemy import create_engine, text
-import pyodbc
+from sqlalchemy import text
 from urllib.parse import quote_plus
 import random
 from datetime import datetime
-from connection import database_connection
+from production_DB_connection import production_database_engine_connection
 
 
-engine = database_connection()
+engine = production_database_engine_connection()
 
 customers = [{
     "first_name": "Abdulwarith",
