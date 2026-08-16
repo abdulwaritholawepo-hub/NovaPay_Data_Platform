@@ -8,7 +8,7 @@ from config import api_config
 
 def get_customer_data(url=None, timeout=None, maximum_retries=None):
     if url is None:
-        url = "https://httpbin.org/status/500"
+        url = api_config.customer_url
     if timeout is None:
         timeout = api_config.timeout
     if maximum_retries is None:
