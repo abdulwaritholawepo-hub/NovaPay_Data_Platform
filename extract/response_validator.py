@@ -8,7 +8,7 @@ required_fields = ["customer_id", "first_name", "last_name", "phone_number", "em
 
 def validate_customer_data():
     
-    customer_data = []
+    customer_data = extract_customers()
   
     if isinstance(customer_data, list):
         print("This is a list")
