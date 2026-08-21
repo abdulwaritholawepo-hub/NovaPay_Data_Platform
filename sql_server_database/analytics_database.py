@@ -1,10 +1,13 @@
 from sqlalchemy import text
 from analytics_DB_connection import analytics_database_engine_connection
-
+import logging
+from config import logging_config
+logger = logging.getLogger(__name__)
 engine = analytics_database_engine_connection()
+logger.info("Analytics database engine created successfully")
 
 with engine.begin() as conn:
-    
+    logger.info("Checking whether customers table exists")
     conn.execute(
         text("""
             IF OBJECT_ID('dbo.customers', 'U') IS NULL
@@ -39,4 +42,4 @@ with engine.begin() as conn:
             END
             """)
             )
-    print("table created succesfully")
+logger.info("Customers table checked/created successfully")

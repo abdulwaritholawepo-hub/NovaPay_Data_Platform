@@ -18,19 +18,31 @@ from transform.transform_helpers import (
 
 )
 from extract.response_validator import validate_customer_data
+import logging
+from config import logging_config
+
+logger = logging.getLogger(__name__)
 
 
 
 def transform_customers():
-
+    logger.info("Starting customer data transformation")
 
     transform_customers_list = []
     seen_customer_ids = set()
     seen_emails = set()
     seen_account_numbers = set()
     validated_customers = validate_customer_data()
+    logger.info(
+        "Customer data validation completed. Records received for transformation: %d",
+        len(validated_customers)
+    )
 
     for customer in validated_customers:
+        logger.info(
+            "Transforming customer %s",
+            customer.get("customer_id")
+        )
         customer_transform = {
             key: clean_transform_value(
                 key=key,
@@ -44,6 +56,10 @@ def transform_customers():
             customer_transform["customer_id"],
             seen_customer_ids,
         ):
+            logger.info(
+                "Customer %s passed customer ID uniqueness check",
+                customer_transform["customer_id"]
+            )
 
             customer_transform["full_name"] = get_full_name(
                 customer_transform["first_name"], customer_transform["last_name"])
@@ -55,6 +71,10 @@ def transform_customers():
                 customer_transform["account_number"],
                 seen_account_numbers,
             ):
+                logger.warning(
+                    "Customer %s has a duplicate account number and will be skipped",
+                    customer_transform["customer_id"]
+                )
                 continue
 
             customer_transform["duplicate_email"] = get_duplicate_email_status(
@@ -101,11 +121,22 @@ def transform_customers():
 
             }
             transform_customers_list.append(ordered_customer)
+            logger.info(
+                "Customer %s transformed successfully",
+                customer_transform["customer_id"]
+            )
 
         else:
+            logger.warning(
+                "Customer %s has a duplicate customer ID and will be skipped",
+                customer_transform["customer_id"]
+            )
             continue
 
-    print(transform_customers_list)
+    logger.info(
+        "Customer transformation completed successfully. Records transformed: %d",
+        len(transform_customers_list)
+    )
 
     return transform_customers_list
 

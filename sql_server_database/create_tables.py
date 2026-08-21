@@ -1,11 +1,14 @@
 from sqlalchemy import text
 from urllib.parse import quote_plus
 from production_DB_connection import production_database_engine_connection
-
+import logging
+from config import logging_config
+logger = logging.getLogger(__name__)
 engine = production_database_engine_connection()
+logger.info("Production database engine created successfully")
 
 with engine.begin() as conn: 
-
+    logger.info("Checking whether customers table exists")
     conn.execute(
         text("""
              IF OBJECT_ID('dbo.customers', 'U') IS NULL
@@ -27,7 +30,9 @@ with engine.begin() as conn:
              """)
     
     )
-
+    logger.info("Customers table checked/created successfully")
+    
+    logger.info("Checking whether merchants table exists")
     conn.execute(
         text("""
              IF OBJECT_ID('dbo.merchants', 'u') IS NULL
@@ -47,13 +52,11 @@ with engine.begin() as conn:
              END
              """)
     )
-   
+    logger.info("Merchants table checked/created successfully")
 
+    logger.info("Checking whether transactions table exists")
     conn.execute(
         text("""
-
-           
-
              IF OBJECT_ID('dbo.transactions','U') IS NULL
              BEGIN
              CREATE TABLE Transactions(
@@ -74,5 +77,9 @@ with engine.begin() as conn:
              END
              """)
     )
+    logger.info("Transactions table checked/created successfully")
 
-print('customer, merchant and transactions table created successfullly')
+logger.info(
+    "Production database table setup completed successfully. "
+    "Customers, merchants, and transactions tables checked/created."
+)
