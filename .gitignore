@@ -34,3 +34,5 @@ reports/
 
 # Windows
 Thumbs.db
+NovaPay_file_logger.txt
+config/test_logging.py
