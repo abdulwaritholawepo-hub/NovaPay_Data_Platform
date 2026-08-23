@@ -57,5 +57,3 @@ def validate_customer_data():
     return customer_data
 
 
-if __name__ == "__main__":
-    validate_customer_data()

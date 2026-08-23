@@ -4,20 +4,18 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import time
 import logging
-from config import api_config
 from config import logging_config
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-
-def get_customer_data(url=None, timeout=None, maximum_retries=None):
+def get_data_from_api(url=None, timeout=None, maximum_retries=None):
     if url is None:
-        url = api_config.customer_url
+        url = url
     if timeout is None:
-        timeout = api_config.timeout
+        timeout = timeout
     if maximum_retries is None:
-        maximum_retries = api_config.maximum_retries
+        maximum_retries = maximum_retries
     for attempts in range(1, maximum_retries + 1):
         try:
             response = requests.get(url, timeout=timeout )
@@ -56,4 +54,3 @@ def get_customer_data(url=None, timeout=None, maximum_retries=None):
                 logger.warning(f"Retrying in {wait_time} seconds")
                 time.sleep(wait_time)
 
-get_customer_data()

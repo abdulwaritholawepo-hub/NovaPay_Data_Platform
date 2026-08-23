@@ -141,5 +141,3 @@ def transform_customers():
     return transform_customers_list
 
 
-if __name__ == "__main__":
-    transform_customers()
