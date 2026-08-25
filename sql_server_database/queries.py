@@ -2,18 +2,16 @@ from sqlalchemy import text
 
 from sql_server_database.production_DB_connection import production_database_engine_connection
 
-def get_customers_records():
+def get_records(table_name):
     engine = production_database_engine_connection()
-    customers_list = []
+    records_list = []
     with engine.begin() as conn:
-        customers = conn.execute(text(
-            """
+        queried_records = conn.execute(text(
+            f"""
             SELECT *
-            FROM customers
+            FROM {table_name}
             """
         ))
-        for customer in customers.mappings():
-            customers_list.append(dict(customer))
-    return customers_list
-
-
+        for records in queried_records.mappings():
+            records_list.append(dict(records))
+    return records_list

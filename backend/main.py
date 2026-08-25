@@ -1,5 +1,8 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI
-from sql_server_database.queries import get_customers_records
+from sql_server_database.queries import get_records
 
 app = FastAPI(
     title="NovaPay API",
@@ -17,19 +20,16 @@ def home():
 
 @app.get("/api/v1/customers")
 def get_customers():
-    customers = get_customers_records()
-    return customers
+    customer_records = get_records(table_name='customers')
+    return customer_records
 
 
 @app.get("/api/v1/transactions")
 def get_transactions():
-    return {
-        "message": "Transactions endpoint is working."
-    }
-
+    transaction_records = get_records(table_name='transactions')
+    return transaction_records
 
 @app.get("/api/v1/merchants")
 def get_merchants():
-    return {
-        "message": "Merchants endpoint is working."
-    }
+    merchant_records = get_records(table_name='merchants')
+    return merchant_records
