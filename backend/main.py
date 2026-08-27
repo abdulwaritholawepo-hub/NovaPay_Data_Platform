@@ -2,7 +2,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from fastapi import FastAPI
-from sql_server_database.queries import get_records
+from production_database.queries import get_records
 
 app = FastAPI(
     title="NovaPay API",

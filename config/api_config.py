@@ -1,4 +1,6 @@
 customer_url = "http://localhost:8000/api/v1/customers"
+merchants_url = "http://localhost:8000/api/v1/merchants"
+transaction_url = "http://localhost:8000/api/v1/transactions"
 api_version = ""
 timeout = 30
 authentication_token = ""

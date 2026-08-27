@@ -17,7 +17,7 @@ from transform.transform_helpers import (
     MISSING_VALUES,
 
 )
-from extract.response_validator import validate_customer_data
+from extract.customer_response_validator import customer_response_validator
 import logging
 from config import logging_config
 
@@ -32,7 +32,7 @@ def transform_customers():
     seen_customer_ids = set()
     seen_emails = set()
     seen_account_numbers = set()
-    validated_customers = validate_customer_data()
+    validated_customers = customer_response_validator()
     logger.info(
         "Customer data validation completed. Records received for transformation: %d",
         len(validated_customers)

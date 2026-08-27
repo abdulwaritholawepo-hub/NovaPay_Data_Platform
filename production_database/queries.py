@@ -1,6 +1,6 @@
 from sqlalchemy import text 
 
-from sql_server_database.production_DB_connection import production_database_engine_connection
+from production_database.production_DB_connection import production_database_engine_connection
 
 def get_records(table_name):
     engine = production_database_engine_connection()

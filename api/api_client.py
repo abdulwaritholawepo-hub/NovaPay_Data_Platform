@@ -9,13 +9,8 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-def get_data_from_api(url=None, timeout=None, maximum_retries=None):
-    if url is None:
-        url = url
-    if timeout is None:
-        timeout = timeout
-    if maximum_retries is None:
-        maximum_retries = maximum_retries
+def get_data_from_api(url, timeout, maximum_retries):
+ 
     for attempts in range(1, maximum_retries + 1):
         try:
             response = requests.get(url, timeout=timeout )
@@ -32,10 +27,10 @@ def get_data_from_api(url=None, timeout=None, maximum_retries=None):
                     raise http_error
                 else:
                     wait_time = attempts**2
-                    logger.warning(f"Retrying in {wait_time} seconds")
+                    logger.warning("Retrying in %d seconds", wait_time)
                     time.sleep(wait_time)
             else:
-                logger.error(f"HTTP error: {status_code}")
+                logger.error("HTTP error: %s", status_code)
                 raise http_error
                 
             
@@ -51,6 +46,6 @@ def get_data_from_api(url=None, timeout=None, maximum_retries=None):
                 
             else:
                 wait_time = attempts**2
-                logger.warning(f"Retrying in {wait_time} seconds")
+                logger.warning("Retrying in %d seconds", wait_time)
                 time.sleep(wait_time)
 

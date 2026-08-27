@@ -5,7 +5,7 @@ from datetime import datetime
 from sqlalchemy import text
 
 from config import logging_config
-from sql_server_database.production_DB_connection import (
+from production_database.production_DB_connection import (
     production_database_engine_connection
 )
 

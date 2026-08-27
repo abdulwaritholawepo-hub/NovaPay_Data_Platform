@@ -3,7 +3,7 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from transform.customer_transformer import transform_customers
 from sqlalchemy import text
-from sql_server_database.analytics_DB_connection import analytics_database_engine_connection
+from analytics_database.analytics_DB_connection import analytics_database_engine_connection
 import logging
 from config import logging_config
 
