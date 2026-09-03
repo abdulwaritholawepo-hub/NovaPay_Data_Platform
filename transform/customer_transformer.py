@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from transform.transform_helpers import (
+from transform.customer_transformer_helper import (
     calculate_account_tenure,
     get_wallet_segment,
     get_risk_details,
@@ -43,7 +43,7 @@ def transform_customers():
             "Transforming customer %s",
             customer.get("customer_id")
         )
-        customer_transform = {
+        customer_dict = {
             key: clean_transform_value(
                 key=key,
                 val=value,
@@ -53,69 +53,69 @@ def transform_customers():
         }
 
         if check_duplicate_customer_id(
-            customer_transform["customer_id"],
+            customer_dict["customer_id"],
             seen_customer_ids,
         ):
             logger.info(
                 "Customer %s passed customer ID uniqueness check",
-                customer_transform["customer_id"]
+                customer_dict["customer_id"]
             )
 
-            customer_transform["full_name"] = get_full_name(
-                customer_transform["first_name"], customer_transform["last_name"])
+            customer_dict["full_name"] = get_full_name(
+                customer_dict["first_name"],customer_dict["last_name"])
 
-            customer_transform["customer_initials"] = get_customer_initials(
-                customer_transform["first_name"], customer_transform["last_name"])
+            customer_dict["customer_initials"] = get_customer_initials(
+            customer_dict["first_name"],customer_dict["last_name"])
 
             if not check_duplicate_account_number(
-                customer_transform["account_number"],
+                customer_dict["account_number"],
                 seen_account_numbers,
             ):
                 logger.warning(
                     "Customer %s has a duplicate account number and will be skipped",
-                    customer_transform["customer_id"]
+                    customer_dict["customer_id"]
                 )
                 continue
 
-            customer_transform["duplicate_email"] = get_duplicate_email_status(
-                customer_transform["email"],
+            customer_dict["duplicate_email"] = get_duplicate_email_status(
+                customer_dict["email"],
                 seen_emails,
             )
 
-            customer_transform["email_domain"] = get_email_domain(
-                customer_transform["email"]
+            customer_dict["email_domain"] = get_email_domain(
+                customer_dict["email"]
             )
 
             (
-                customer_transform["age"],
-                customer_transform["is_adult"],
-                customer_transform["eligibility"],
-                customer_transform["customer_segment"],
+                customer_dict["age"],
+                customer_dict["is_adult"],
+                customer_dict["eligibility"],
+                customer_dict["customer_segment"],
             ) = get_customer_age_details(
-                customer_transform["date_of_birth"]
+                customer_dict["date_of_birth"]
             )
 
             (
-                customer_transform["account_tenure_days"],
-                customer_transform["customer_lifetime_stage"]
+                customer_dict["account_tenure_days"],
+                customer_dict["customer_lifetime_stage"]
             ) = calculate_account_tenure(
-                customer_transform["created_at"],
-                customer_transform["date_of_birth"],
+                customer_dict["created_at"],
+                customer_dict["date_of_birth"],
             )
 
-            customer_transform["wallet_segment"] = get_wallet_segment(
-                customer_transform["wallet_balance"]
+            customer_dict["wallet_segment"] = get_wallet_segment(
+                customer_dict["wallet_balance"]
             )
 
             (
-                customer_transform["risk_level"],
-                customer_transform["risk_flag"]
+                customer_dict["risk_level"],
+                customer_dict["risk_flag"]
             ) = get_risk_details(
-                customer_transform["account_status"],
-                customer_transform["wallet_balance"])
+                customer_dict["account_status"],
+                customer_dict["wallet_balance"])
 
             ordered_customer = {
-                column: customer_transform.get(column)
+                column: customer_dict.get(column)
                 for column in COLUMN_ORDER
 
 
@@ -123,13 +123,13 @@ def transform_customers():
             transform_customers_list.append(ordered_customer)
             logger.info(
                 "Customer %s transformed successfully",
-                customer_transform["customer_id"]
+                customer_dict["customer_id"]
             )
 
         else:
             logger.warning(
                 "Customer %s has a duplicate customer ID and will be skipped",
-                customer_transform["customer_id"]
+                customer_dict["customer_id"]
             )
             continue
 

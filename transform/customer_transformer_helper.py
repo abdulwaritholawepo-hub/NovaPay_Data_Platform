@@ -122,7 +122,6 @@ def clean_wallet_balance(val):
 
 def clean_account_number(val):
 
-
     val = (
         val.replace(" ", "")
         .replace("-", "")

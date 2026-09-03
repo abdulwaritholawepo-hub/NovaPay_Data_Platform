@@ -1,5 +1,5 @@
 from transform.customer_transformer import transform_customers
-from transform.transform_helpers import COLUMN_ORDER
+from transform.customer_transformer_helper import COLUMN_ORDER
 from sqlalchemy import text
 
 transformed_customer_data = transform_customers()
