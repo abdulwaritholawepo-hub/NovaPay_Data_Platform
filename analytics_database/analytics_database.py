@@ -1,5 +1,5 @@
 from sqlalchemy import text
-from analytics_DB_connection import analytics_database_engine_connection
+from analytics_database.analytics_DB_connection import analytics_database_engine_connection
 import logging
 from config import logging_config
 logger = logging.getLogger(__name__)

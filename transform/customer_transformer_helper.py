@@ -364,36 +364,6 @@ def get_customer_age_details(date_of_birth):
     return age, is_adult, eligibility, customer_segment
 
 
-def check_duplicate_account_number(account_number, seen_account_numbers):
-
-
-    if account_number not in seen_account_numbers:
-        seen_account_numbers.add(account_number)
-        return True
-
-    return False
-
-
-def check_duplicate_customer_id(customer_id, seen_customer_ids):
-
-
-    if customer_id not in seen_customer_ids:
-        seen_customer_ids.add(customer_id)
-        return True
-
-    return False
-
-
-def get_duplicate_email_status(email, seen_emails):
-
-
-    if email in seen_emails:
-        return "Duplicate"
-
-    seen_emails.add(email)
-    return "Unique"
-
-
 def get_email_domain(email):
 
 

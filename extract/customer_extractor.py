@@ -5,4 +5,6 @@ from api.customer_api_client import get_customer_data
 
 def extract_customers():
     customer_data = get_customer_data()
+    print(customer_data)
     return customer_data
+extract_customers()

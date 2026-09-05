@@ -34,14 +34,14 @@ def incremental_cutomer_loader():
 
         for customer in transformed_customer_data:
             customer_id = customer.get("customer_id")
-        if customer_id > max_customer_id:
-            new_customers_list.append(customer)
+            if customer_id > max_customer_id:
+                new_customers_list.append(customer)
+                logger.info(
+                    "New customer identified: %s",
+                    customer_id
+                )
             logger.info(
-                "New customer identified: %s",
-                customer_id
+                "New customer identification completed. New customers found: %d",
+                len(new_customers_list)
             )
-        logger.info(
-            "New customer identification completed. New customers found: %d",
-            len(new_customers_list)
-        )
     return new_customers_list
