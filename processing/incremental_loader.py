@@ -7,22 +7,22 @@ import logging
 from config import logging_config
 
 logger = logging.getLogger(__name__)
-
-def generic_incremental_loader(transformed_data, domain):
-    DOMAIN_CONFIG = {
-        "customer": {
-            "table": "customers",
-            "id_column": "customer_id"
-        },
-        "merchant": {
-            "table": "merchants",
-            "id_column": "merchant_id"
-        },
-        "transaction": {
-            "table": "transactions",
-            "id_column": "transaction_id"
-        }
+DOMAIN_CONFIG = {
+    "customer": {
+        "table": "customers",
+        "id_column": "customer_id"
+    },
+    "merchant": {
+        "table": "merchants",
+        "id_column": "merchant_id"
+    },
+    "transaction": {
+        "table": "transactions",
+        "id_column": "transaction_id"
     }
+}
+def generic_incremental_loader(transformed_data, domain):
+    
     config = DOMAIN_CONFIG[domain]
     table_name = config["table"]
     id_column = config["id_column"]
@@ -34,7 +34,7 @@ def generic_incremental_loader(transformed_data, domain):
     logger.info("Analytics database engine created successfully")
 
     with engine.begin() as conn:
-        logger.info(f"Fetching maximum {config} ID from {table_name}")
+        logger.info(f"Fetching maximum {domain} ID from {table_name}")
         result = conn.execute(
                 text(f"""
                     select max({id_column})
@@ -42,7 +42,7 @@ def generic_incremental_loader(transformed_data, domain):
         """))
         max_id = result.scalar()
         logger.info(
-            f"Maximum existing {config} ID retrieved: %s",
+            f"Maximum existing {domain} ID retrieved: %s",
             max_id
         )
         new_list = []
@@ -56,7 +56,7 @@ def generic_incremental_loader(transformed_data, domain):
                     record_id
                 )
         logger.info(
-            f"New {config} identification completed. New {table_name} found: %d",
+            f"New {domain} identification completed. New {table_name} found: %d",
             len(new_list)
         )
     return new_list

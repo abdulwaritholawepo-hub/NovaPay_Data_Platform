@@ -26,7 +26,7 @@ def generic_batch_loader(domain_column_order,batch_domain, transformed_data, ):
     incremental_domain = generic_incremental_loader(transformed_data=transformed_data, domain=batch_domain)
     logger.info(
         f"Number of {batch_domain} to insert: %d",
-        len(batch_domain)
+        len(incremental_domain)
     )
     batch_size = 5
     start = 0
@@ -49,7 +49,7 @@ def generic_batch_loader(domain_column_order,batch_domain, transformed_data, ):
                 with engine.begin() as conn:
                     insert_batch = conn.execute(insert_records, record_batch)
                     logger.info(
-                        "Batch %d inserted successfully. Customers inserted: %d",
+                        f"Batch %d inserted successfully. {batch_domain} insertaed: %d",
                         batch_no,
                         len(record_batch)
                     )
