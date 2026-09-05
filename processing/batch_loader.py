@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 engine = analytics_database_engine_connection()
 logger.info("Analytics database engine created successfully")
 
-def generic_batch_loader(domain_column_order,batch_domain, transformed_data, ):
+def generic_batch_loader(domain,domain_column_order,batch_domain, transformed_data, ):
 
     columns = ", ".join(domain_column_order)
     parameters = ", ".join(f":{column}" for column in domain_column_order)
@@ -23,7 +23,7 @@ def generic_batch_loader(domain_column_order,batch_domain, transformed_data, ):
         VALUES({parameters})
         """)
 
-    incremental_domain = generic_incremental_loader(transformed_data=transformed_data, domain=batch_domain)
+    incremental_domain = generic_incremental_loader(domain=domain,transformed_data=transformed_data)
     logger.info(
         f"Number of {batch_domain} to insert: %d",
         len(incremental_domain)
@@ -49,7 +49,7 @@ def generic_batch_loader(domain_column_order,batch_domain, transformed_data, ):
                 with engine.begin() as conn:
                     insert_batch = conn.execute(insert_records, record_batch)
                     logger.info(
-                        f"Batch %d inserted successfully. {batch_domain} insertaed: %d",
+                        f"Batch %d inserted successfully. {batch_domain} inserted: %d",
                         batch_no,
                         len(record_batch)
                     )

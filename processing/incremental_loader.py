@@ -27,7 +27,7 @@ def generic_incremental_loader(transformed_data, domain):
     table_name = config["table"]
     id_column = config["id_column"]
     logger.info(
-        f"{config} transformation completed. Records received: %d",
+        f"{table_name} transformation completed. Records received: %d",
         len(transformed_data)
     )
     engine = analytics_database_engine_connection()

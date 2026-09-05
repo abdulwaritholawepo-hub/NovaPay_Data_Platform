@@ -10,6 +10,7 @@ table_name = config["table"]
 def customer_batch_loader():
     loader = generic_batch_loader(batch_domain=table_name,
                                    domain_column_order=COLUMN_ORDER,
-                                   transformed_data= transform_customers()
+                                   transformed_data= transform_customers(),
+                                   domain="customer"
                                    )
     return loader
