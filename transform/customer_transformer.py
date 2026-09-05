@@ -191,5 +191,3 @@ def transform_customers():
 
     return transform_customers_list
 
-
-transform_customers()

@@ -5,7 +5,7 @@ from sqlalchemy.exc import SQLAlchemyError, ProgrammingError,OperationalError,DB
 from sqlalchemy import text
 from transform.customer_transformer_helper import COLUMN_ORDER
 from analytics_database.analytics_DB_connection import analytics_database_engine_connection
-from processing.incremental_loader import incremental_cutomer_loader
+from processing.incremental_loader import generic_incremental_loader
 import time
 import logging
 from config import logging_config
@@ -14,44 +14,44 @@ logger = logging.getLogger(__name__)
 engine = analytics_database_engine_connection()
 logger.info("Analytics database engine created successfully")
 
-def batch_loader():
+def generic_batch_loader(domain_column_order,batch_domain, transformed_data, ):
 
-    columns = ", ".join(COLUMN_ORDER)
-    parameters = ", ".join(f":{column}" for column in COLUMN_ORDER)
-    insert_customers = text(f"""
-        INSERT INTO customers({columns})
+    columns = ", ".join(domain_column_order)
+    parameters = ", ".join(f":{column}" for column in domain_column_order)
+    insert_records = text(f"""
+        INSERT INTO {batch_domain} ({columns})
         VALUES({parameters})
         """)
 
-    customers = incremental_cutomer_loader()
+    incremental_domain = generic_incremental_loader(transformed_data=transformed_data, domain=batch_domain)
     logger.info(
-        "Number of customers to insert: %d",
-        len(customers)
+        f"Number of {batch_domain} to insert: %d",
+        len(batch_domain)
     )
     batch_size = 5
     start = 0
     batch_no = 0
 
-    insert = None
+    insert_batch = None
     maximum_retries = 5
-    customer_length = len(customers)
+    domain_length = len(incremental_domain)
 
-    for customer in range(start, customer_length, batch_size):
-        customer_batch = customers[customer:customer + batch_size]
+    for record in range(start, domain_length, batch_size):
+        record_batch = incremental_domain[record:record + batch_size]
         batch_no += 1
         logger.info(
-            "Processing batch %d. Customers in batch: %d",
+            f"Processing batch %d. {batch_domain} in batch: %d",
             batch_no,
-            len(customer_batch)
+            len(record_batch)
         )
         for attempts in range(1, maximum_retries+1):
             try:
                 with engine.begin() as conn:
-                    insert = conn.execute(insert_customers, customer_batch)
+                    insert_batch = conn.execute(insert_records, record_batch)
                     logger.info(
                         "Batch %d inserted successfully. Customers inserted: %d",
                         batch_no,
-                        len(customer_batch)
+                        len(record_batch)
                     )
                     break
             except SQLAlchemyError as error:
@@ -110,4 +110,4 @@ def batch_loader():
                         batch_no
                     )
                     break
-    return insert
+    return insert_batch
