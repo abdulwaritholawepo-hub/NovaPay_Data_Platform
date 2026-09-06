@@ -7,7 +7,7 @@ from transform.customer_transformer import transform_customers
 from processing.incremental_loader import DOMAIN_CONFIG
 config = DOMAIN_CONFIG["customer"]
 table_name = config["table"]
-def customer_batch_loader():
+def batch_loader_customer():
     loader = generic_batch_loader(batch_domain=table_name,
                                    domain_column_order=COLUMN_ORDER,
                                    transformed_data= transform_customers(),

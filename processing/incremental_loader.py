@@ -9,15 +9,15 @@ from config import logging_config
 logger = logging.getLogger(__name__)
 DOMAIN_CONFIG = {
     "customer": {
-        "table": "customers",
+        "table": "Customers",
         "id_column": "customer_id"
     },
     "merchant": {
-        "table": "merchants",
+        "table": "Merchants",
         "id_column": "merchant_id"
     },
     "transaction": {
-        "table": "transactions",
+        "table": "Transactions",
         "id_column": "transaction_id"
     }
 }
@@ -38,7 +38,7 @@ def generic_incremental_loader(transformed_data, domain):
         result = conn.execute(
                 text(f"""
                     select max({id_column})
-                    from {table_name}
+                    from dbo.{table_name}
         """))
         max_id = result.scalar()
         logger.info(

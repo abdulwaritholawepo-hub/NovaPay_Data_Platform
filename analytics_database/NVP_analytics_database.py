@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import text
 from analytics_database.analytics_DB_connection import analytics_database_engine_connection
 import logging
@@ -42,4 +45,38 @@ with engine.begin() as conn:
             END
             """)
             )
-logger.info("Customers table checked/created successfully")
+    
+    logger.info("Customers table checked/created successfully")
+
+    logger.info("Checking whether merchants table exists")
+    
+    conn.execute(
+        text("""
+            IF OBJECT_ID('dbo.merchants', 'U') IS NULL
+            BEGIN
+                CREATE TABLE merchants(
+                    merchant_id INT PRIMARY KEY NOT NULL,
+                    merchant_code VARCHAR(20) UNIQUE NOT NULL,
+                    merchant_name VARCHAR(150) NULL,
+                    category VARCHAR(100) NULL,
+                    segment VARCHAR(100) NULL,
+                    email VARCHAR(255) NULL,
+                    email_domain VARCHAR(100) NULL,
+                    duplicate_email VARCHAR(50) NULL,
+                    phone_number VARCHAR(20) NULL,
+                    city VARCHAR(100) NULL,
+                    state VARCHAR(100) NULL,
+                    location VARCHAR(200) NULL,
+                    account_number VARCHAR(10) UNIQUE NOT NULL,
+                    merchant_status VARCHAR(30) NULL,
+                    is_active BIT NULL,
+                    created_at DATETIME2 NULL,
+                    merchant_tenure_days INT NULL,
+                    tenure_category VARCHAR(50) NULL
+                )
+            END
+        """)
+    )
+
+logger.info("Merchants table checked/created successfully")
+
