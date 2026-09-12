@@ -77,6 +77,29 @@ with engine.begin() as conn:
             END
         """)
     )
+    logger.info("Merchants table checked/created successfully")
+    logger.info("Checking whether transactions table exists")
+    conn.execute(
+        text("""
+                IF OBJECT_ID ('dbo.transactions', 'U') IS NULL
+                BEGIN
+                    CREATE TABLE transactions(
+                    transaction_id INT PRIMARY KEY NOT NULL,
+                    sender_id INT NOT NULL,
+                    receiver_id INT NOT NULL,
+                    receiver_type VARCHAR(20) NOT NULL,
+                    amount DECIMAL (18,2) NOT NULL,
+                    currency VARCHAR(10) NOT NULL,
+                    payment_method VARCHAR(30) NOT NULL,
+                    transaction_category VARCHAR(20) NOT NULL,
+                    transaction_direction VARCHAR(10) NOT NULL,
+                    status VARCHAR(15) NOT NULL,
+                    reference_number VARCHAR(50) UNIQUE NOT NULL,
+                    narration VARCHAR(255) null,
+                    created_at DATETIME2 NOT NULL
+                    )
+                END
 
-logger.info("Merchants table checked/created successfully")
+            """))
+    logger.info("transactions table checked/created successfully")
 

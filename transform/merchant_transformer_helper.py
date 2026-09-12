@@ -1,7 +1,5 @@
 from datetime import datetime, date
 
-
-
 MERCHANT_COLUMN_ORDER = [
     "merchant_id",
     "merchant_code",
@@ -66,7 +64,6 @@ def cleaning_key_value(key, value):
     if value is None:
         return None
     if key == "merchant_id":
-
         if isinstance(value,bool):
             return INVALID_MERCHANT_ID
         if not isinstance(value,int):

@@ -7,4 +7,3 @@ def extract_merchants():
     merchants_data = get_merchants_data()
     print(merchants_data)
     return merchants_data
-extract_merchants()

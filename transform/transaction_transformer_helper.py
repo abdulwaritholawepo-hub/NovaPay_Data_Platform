@@ -147,8 +147,9 @@ def cleaning_transactions_value(key,value):
             return INVALID_REFERENCE_NUMBER
 
     if key == "narration":
-        if not isinstance(value,str) or not value:
+        if not isinstance(value,str):
             return INVALID_NARRATION
+        
     if key == "created_at":
         if not isinstance(value,str) or not value:
             return INVALID_CREATED_AT

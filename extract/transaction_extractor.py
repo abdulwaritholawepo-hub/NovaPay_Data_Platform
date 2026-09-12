@@ -6,4 +6,6 @@ from api.transaction_api_client import get_transaction_data
 
 def extract_transactions():
     transaction_data = get_transaction_data()
+    print(transaction_data)
     return transaction_data
+extract_transactions()

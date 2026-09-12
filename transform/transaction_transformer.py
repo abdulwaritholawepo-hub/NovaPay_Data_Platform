@@ -103,4 +103,3 @@ def transform_transactions():
         duplicate_reference_numbers
     )
     return valid_transactions_list
-transform_transactions()

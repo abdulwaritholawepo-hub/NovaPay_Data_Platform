@@ -173,4 +173,3 @@ def transform_merchants():
     )
 
     return transformed_merchants_list
-transform_merchants()
