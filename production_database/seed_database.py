@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import logging
 import random
 from datetime import datetime
@@ -8,7 +11,7 @@ from config import logging_config
 from production_database.production_DB_connection import (
     production_database_engine_connection
 )
-
+from production_database.id_query_functions import get_customer_ids, get_merchant_ids
 
 logger = logging.getLogger(__name__)
 
@@ -379,7 +382,7 @@ def generate_merchants():
     return merchants
 
 
-def generate_transactions(number_of_transactions=50):
+def generate_transactions(customer_ids, merchant_ids, number_of_transactions=50):
     """Generate synthetic transaction records."""
 
     transactions = []
@@ -454,12 +457,21 @@ def generate_transactions(number_of_transactions=50):
             if reference_number not in used_reference_numbers:
                 used_reference_numbers.add(reference_number)
                 break
+        sender_id = random.choice(customer_ids)
 
+        receiver_type = random.choice(
+            ["customer", "merchant"]
+        )
+
+        if receiver_type == "customer":
+            receiver_id = random.choice(customer_ids)
+        else:
+            receiver_id = random.choice(merchant_ids)
         transaction = {
-            "sender_id": random.randint(1, len(CUSTOMER_DATA)),
-            "receiver_id": random.randint(1, len(MERCHANT_DATA)),
+            "sender_id": sender_id,
+            "receiver_id": receiver_id,
             "amount": random.choice(transaction_amounts),
-            "receiver_type": "merchant",
+            "receiver_type": receiver_type,
             "currency": "NGN",
             "payment_method": random.choice(payment_methods),
             "transaction_category": random.choice(
@@ -488,13 +500,11 @@ def seed_database():
 
     customers = generate_customers()
     merchants = generate_merchants()
-    transactions = generate_transactions()
-
+    
     logger.info(
-        "Generated %d customers, %d merchants and %d transactions",
+        "Generated %d customers, %d merchants",
         len(customers),
-        len(merchants),
-        len(transactions)
+        len(merchants)
     )
 
     insert_customers = text("""
@@ -585,16 +595,29 @@ def seed_database():
     logger.info("Production database engine created successfully")
 
     with engine.begin() as conn:
-
+        
         logger.info("Inserting %d customers", len(customers))
         conn.execute(insert_customers, customers)
 
         logger.info("Inserting %d merchants", len(merchants))
         conn.execute(insert_merchants, merchants)
 
+       
+        customer_ids = get_customer_ids(conn=conn)
+        merchant_ids = get_merchant_ids(conn=conn)
+
+        transactions = generate_transactions(
+            customer_ids,
+            merchant_ids
+        )
+        logger.info(
+            "Generated %d transactions",
+            len(transactions)
+        )
+
         logger.info("Inserting %d transactions", len(transactions))
         conn.execute(insert_transactions, transactions)
-
+        
     logger.info("NovaPay database seeded successfully")
 
 

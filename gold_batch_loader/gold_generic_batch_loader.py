@@ -1,31 +1,36 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from sqlalchemy.exc import SQLAlchemyError, ProgrammingError,OperationalError,DBAPIError
-from sqlalchemy import text
-from transform.customer_transformer_helper import COLUMN_ORDER
-from analytics_database.analytics_DB_connection import analytics_database_engine_connection
-from processing.incremental_loader import generic_incremental_loader
-import time
-import logging
+
+from sqlalchemy.exc import SQLAlchemyError, ProgrammingError, OperationalError, DBAPIError
 from config import logging_config
+import logging
+import time
+from gold_incremental_loader.gold_generic_incremental import gold_generic_incremental_loader
+from analytics_database.analytics_DB_connection import analytics_database_engine_connection
+from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 engine = analytics_database_engine_connection()
 logger.info("Analytics database engine created successfully")
 
-def generic_batch_loader(domain,domain_column_order,batch_domain, transformed_data, ):
 
-    columns = ", ".join(domain_column_order)
-    parameters = ", ".join(f":{column}" for column in domain_column_order)
+def generic_batch_loader(domain, column_order, table_name, transformed_data,schema):
+
+    columns = ", ".join(column_order)
+    parameters = ", ".join(f":{column}" for column in column_order)
     insert_records = text(f"""
-        INSERT INTO {batch_domain} ({columns})
-        VALUES({parameters})
+        INSERT INTO {table_name} ({columns})
+        
+        SELECT {column_order}
+
+        FROM {schema}{table_name}
         """)
 
-    incremental_domain = generic_incremental_loader(domain=domain,transformed_data=transformed_data)
+    incremental_domain = gold_generic_incremental_loader(
+        domain=domain, transformed_data=transformed_data)
     logger.info(
-        f"Number of {batch_domain} to insert: %d",
+        f"Number of {table_name} to insert: %d",
         len(incremental_domain)
     )
     batch_size = 5
@@ -40,7 +45,7 @@ def generic_batch_loader(domain,domain_column_order,batch_domain, transformed_da
         record_batch = incremental_domain[record:record + batch_size]
         batch_no += 1
         logger.info(
-            f"Processing batch %d. {batch_domain} in batch: %d",
+            f"Processing batch %d. {table_name} in batch: %d",
             batch_no,
             len(record_batch)
         )
@@ -49,7 +54,7 @@ def generic_batch_loader(domain,domain_column_order,batch_domain, transformed_da
                 with engine.begin() as conn:
                     insert_batch = conn.execute(insert_records, record_batch)
                     logger.info(
-                        f"Batch %d inserted successfully. {batch_domain} inserted: %d",
+                        f"Batch %d inserted successfully. {table_name} inserted: %d",
                         batch_no,
                         len(record_batch)
                     )
@@ -103,7 +108,7 @@ def generic_batch_loader(domain,domain_column_order,batch_domain, transformed_da
                             maximum_retries
                         )
                         time.sleep(wait_time)
-                else: 
+                else:
                     logger.error(
                         "Unhandled SQLAlchemy error encountered in batch %d. "
                         "Batch will not be retried.",

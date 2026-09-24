@@ -1,3 +1,6 @@
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sqlalchemy import text
 from urllib.parse import quote_plus
 from production_database.production_DB_connection import production_database_engine_connection
@@ -11,7 +14,7 @@ with engine.begin() as conn:
     logger.info("Checking whether customers table exists")
     conn.execute(
         text("""
-             IF OBJECT_ID('dbo.customers', 'U') IS NULL
+             IF OBJECT_ID('dbo.Customers', 'U') IS NULL
              BEGIN
              CREATE TABLE Customers(
              customer_id INTEGER IDENTITY(1,1) PRIMARY KEY,
@@ -35,7 +38,7 @@ with engine.begin() as conn:
     logger.info("Checking whether merchants table exists")
     conn.execute(
         text("""
-             IF OBJECT_ID('dbo.merchants', 'u') IS NULL
+             IF OBJECT_ID('dbo.Merchants', 'u') IS NULL
              BEGIN
              CREATE TABLE Merchants(
              merchant_id INTEGER IDENTITY(1,1) PRIMARY KEY,
@@ -57,7 +60,7 @@ with engine.begin() as conn:
     logger.info("Checking whether transactions table exists")
     conn.execute(
         text("""
-             IF OBJECT_ID('dbo.transactions','U') IS NULL
+             IF OBJECT_ID('dbo.Transactions','U') IS NULL
              BEGIN
              CREATE TABLE Transactions(
              transaction_id INTEGER IDENTITY(1,1) PRIMARY KEY,

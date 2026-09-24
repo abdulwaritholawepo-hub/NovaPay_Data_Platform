@@ -11,6 +11,7 @@ logger.info("Analytics database engine created successfully")
 
 with engine.begin() as conn:
     logger.info("Checking whether customers table exists")
+  
     conn.execute(
         text("""
             IF OBJECT_ID('dbo.customers', 'U') IS NULL

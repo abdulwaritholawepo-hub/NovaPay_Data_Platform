@@ -10,22 +10,22 @@ logger = logging.getLogger(__name__)
 DOMAIN_CONFIG = {
     "customer": {
         "table": "Customers",
-        "id_column": "customer_id"
+        "created_at_column": "created_at"
     },
     "merchant": {
         "table": "Merchants",
-        "id_column": "merchant_id"
+        "created_at_column": "created_at"
     },
     "transaction": {
         "table": "Transactions",
-        "id_column": "transaction_id"
+        "created_at_column": "created_at"
     }
 }
-def generic_incremental_loader(transformed_data, domain):
+def generic_incremental_loader(transformed_data, domain, schema):
     
     config = DOMAIN_CONFIG[domain]
     table_name = config["table"]
-    id_column = config["id_column"]
+    created_at = config["created_at_column"]
     logger.info(
         f"{table_name} transformation completed. Records received: %d",
         len(transformed_data)
@@ -34,26 +34,26 @@ def generic_incremental_loader(transformed_data, domain):
     logger.info("Analytics database engine created successfully")
 
     with engine.begin() as conn:
-        logger.info(f"Fetching maximum {domain} ID from {table_name}")
+        logger.info(f"Fetching maximum {created_at}  from {table_name}")
         result = conn.execute(
                 text(f"""
-                    select max({id_column})
-                    from dbo.{table_name}
+                    select max({created_at})
+                    from {schema}{table_name}
         """))
-        max_id = result.scalar()
+        max_created_at = result.scalar()
         logger.info(
-            f"Maximum existing {domain} ID retrieved: %s",
-            max_id
+            f"Maximum existing {domain} created_at retrieved: %s",
+            max_created_at
         )
         new_list = []
 
         for record in transformed_data:
-            record_id = record.get(id_column)
-            if max_id is None or record_id > max_id:
+            record_created_at = record.get(created_at)
+            if max_created_at is None or record_created_at > max_created_at:
                 new_list.append(record)
                 logger.info(
-                    f"New {id_column} identified: %s",
-                    record_id
+                    f"New {domain} identified with created_at: %s",
+                    record_created_at
                 )
         logger.info(
             f"New {domain} identification completed. New {table_name} found: %d",

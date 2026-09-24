@@ -8,7 +8,7 @@ from processing.incremental_loader import DOMAIN_CONFIG
 config = DOMAIN_CONFIG["transaction"]
 table_name = config["table"]
 def batch_loader_transactions():
-    return generic_batch_loader(batch_domain=table_name,
-                                domain_column_order=TRANSACTION_COLUMN_ORDER,
+    return generic_batch_loader(table_name=table_name,
+                                column_order=TRANSACTION_COLUMN_ORDER,
                                 transformed_data=transform_transactions(),
                                 domain="transaction")
