@@ -18,17 +18,18 @@ logger.info("Analytics database engine created successfully")
 def generic_batch_loader(domain, column_order, table_name, transformed_data,schema):
 
     columns = ", ".join(column_order)
-    parameters = ", ".join(f":{column}" for column in column_order)
     insert_records = text(f"""
         INSERT INTO {table_name} ({columns})
         
-        SELECT {column_order}
+        SELECT {columns} 
 
-        FROM {schema}{table_name}
+        FROM {schema}customers c
+        LEFT JOIN gold.dim_customers dc
+        on c.customer_id = dc.customer_id
         """)
 
     incremental_domain = gold_generic_incremental_loader(
-        domain=domain, transformed_data=transformed_data)
+        domain=domain, transformed_data=transformed_data, schema="gold.")
     logger.info(
         f"Number of {table_name} to insert: %d",
         len(incremental_domain)

@@ -12,14 +12,15 @@ with engine.begin() as conn:
              EXEC('CREATE SCHEMA gold')
              END
              """))
-        
+
+
 with engine.begin() as conn:
     conn.execute(text(
         """
         IF OBJECT_ID('gold.dim_customer', 'U') IS NULL
         BEGIN
         CREATE TABLE gold.dim_customer(
-    customer_key INT PRIMARY KEY NOT NULL,
+    customer_key INT IDENTITY (1,1) PRIMARY KEY NOT NULL,
     customer_id INT NOT NULL,
     account_number VARCHAR(20) NOT NULL,
     first_name VARCHAR(50) NOT NULL,
@@ -59,7 +60,7 @@ with engine.begin() as conn:
         IF OBJECT_ID('gold.dim_merchant','U') IS NULL
 BEGIN
     CREATE TABLE gold.dim_merchant(
-	    merchant_key INT PRIMARY KEY NOT NULL,
+	    merchant_key INT IDENTITY (1,1) PRIMARY KEY NOT NULL,
 	    merchant_id INT NOT NULL,
         account_number VARCHAR(20) NOT NULL,
 	    merchant_code VARCHAR(20) NOT NULL,
@@ -91,7 +92,7 @@ with engine.begin() as conn:
         IF OBJECT_ID('gold.dim_date', 'U') IS NULL
 BEGIN
 	CREATE TABLE gold.dim_date(
-		date_key INT PRIMARY KEY NOT NULL,
+		date_key INT IDENTITY (1,1) PRIMARY KEY NOT NULL,
 		full_date DATE NOT NULL,
 		day INT NOT NULL,
 		day_name VARCHAR(10) NOT NULL,
@@ -113,7 +114,7 @@ with engine.begin() as conn:
         IF OBJECT_ID ('gold.fact_transaction', 'U') IS NULL
 BEGIN
     CREATE TABLE gold.fact_transaction(
-    transaction_key INT PRIMARY KEY NOT NULL,
+    transaction_key INT IDENTITY (1,1) PRIMARY KEY NOT NULL,
     transaction_id INT NOT NULL,
     sender_customer_key INT NOT NULL,
     receiver_customer_key INT NULL,

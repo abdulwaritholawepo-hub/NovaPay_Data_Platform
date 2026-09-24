@@ -5,7 +5,7 @@ from gold_batch_loader.gold_generic_batch_loader import generic_batch_loader
 from gold_incremental_loader.gold_generic_incremental import DOMAIN_CONFIG
 from silver_query.silver_generic_query import generic_silver_query
 
-silver_data = generic_silver_query("customer")
+silver_data = generic_silver_query("customers")
 config = DOMAIN_CONFIG["customer"]
 table_name = config["table"]
 gold_customer_column_order = [
@@ -61,7 +61,7 @@ parameters = (
         'created_at',
         'account_tenure_days',
         'customer_lifetime_stage',
-        'sysdatetime()',
+        'sysdatetime()' ,
         'null',
         '1'
     )
@@ -73,3 +73,4 @@ def gold_customer_batch_loader():
                                    schema='dbo.'
                                    )
     return loader
+gold_customer_batch_loader()
