@@ -14,11 +14,11 @@ DOMAIN_CONFIG = {
         "created_at_column": "created_at"
     },
     "merchant": {
-        "table": "dim_merchants",
+        "table": "dim_merchant",
         "created_at_column": "created_at"
     },
     "transaction": {
-        "table": "fact_transactions",
+        "table": "fact_transaction",
         "created_at_column": "created_at"
     },
     "date": {

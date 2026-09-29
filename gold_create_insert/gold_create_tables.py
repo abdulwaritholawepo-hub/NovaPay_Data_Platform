@@ -14,6 +14,9 @@ with engine.begin() as conn:
              """))
 
 
+
+
+
 with engine.begin() as conn:
     conn.execute(text(
         """
@@ -35,12 +38,12 @@ with engine.begin() as conn:
     customer_segment VARCHAR(30) NULL,
     phone_number VARCHAR(20) NULL,
     email_domain VARCHAR(100) NULL,
-    duplicate_email BIT NOT NULL,
+    duplicate_email VARCHAR(20) NOT NULL,
     account_status VARCHAR(20) NULL,
     wallet_balance DECIMAL(18, 2) NOT NULL,
     wallet_segment VARCHAR(30) NULL,
     risk_level VARCHAR(20) NULL,
-    risk_flag BIT NOT NULL,
+    risk_flag VARCHAR(20) NOT NULL,
     created_at DATETIME2 NULL,
     account_tenure_days INT NULL,
     customer_lifetime_stage VARCHAR(30) NULL,
@@ -54,6 +57,7 @@ END
         """
         ))
 
+    
 with engine.begin() as conn:
     conn.execute(
         text("""
@@ -69,7 +73,7 @@ BEGIN
 	    segment VARCHAR(100) NULL,
 	    email VARCHAR(255) NULL,
         email_domain VARCHAR(100) NULL,
-	    duplicate_email BIT NOT NULL,
+	    duplicate_email VARCHAR(20) NOT NULL,
         phone_number VARCHAR(20) NULL,
         city VARCHAR(100) NULL,
         state VARCHAR(100) NULL,
@@ -87,13 +91,18 @@ END
         """))
 
 with engine.begin() as conn:
+     conn.execute(text("""
+        DROP TABLE IF EXISTS gold.dim_date
+     """))
+     print("dim date dropped")
+with engine.begin() as conn:
     conn.execute(
         text("""
         IF OBJECT_ID('gold.dim_date', 'U') IS NULL
 BEGIN
 	CREATE TABLE gold.dim_date(
 		date_key INT IDENTITY (1,1) PRIMARY KEY NOT NULL,
-		full_date DATE NOT NULL,
+		full_date DATE UNIQUE NOT NULL,
 		day INT NOT NULL,
 		day_name VARCHAR(10) NOT NULL,
 		day_of_week INT not null,
@@ -107,10 +116,10 @@ BEGIN
 END
         """))
 
-
 with engine.begin() as conn:
     conn.execute(
         text("""
+        
         IF OBJECT_ID ('gold.fact_transaction', 'U') IS NULL
 BEGIN
     CREATE TABLE gold.fact_transaction(
@@ -139,6 +148,7 @@ BEGIN
 
     CONSTRAINT FK_fact_transaction_receiver_merchant FOREIGN KEY (receiver_merchant_key)
     REFERENCES gold.dim_merchant(merchant_key),
+
 
     CONSTRAINT FK_fact_transaction_date FOREIGN KEY (date_key)
     REFERENCES gold.dim_date(date_key)
