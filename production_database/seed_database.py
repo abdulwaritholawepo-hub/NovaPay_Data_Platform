@@ -382,7 +382,12 @@ def generate_merchants():
     return merchants
 
 
-def generate_transactions(customer_ids, merchant_ids, number_of_transactions=50):
+def generate_transactions(
+    customer_ids,
+    merchant_ids,
+    number_of_transactions=51,
+    existing_reference_numbers= None
+):
     """Generate synthetic transaction records."""
 
     transactions = []
@@ -442,7 +447,8 @@ def generate_transactions(customer_ids, merchant_ids, number_of_transactions=50)
     start_ts = start_dt.timestamp()
     end_ts = end_dt.timestamp()
 
-    used_reference_numbers = set()
+
+    used_reference_numbers = set(existing_reference_numbers or [])
 
     for _ in range(number_of_transactions):
 
@@ -508,54 +514,33 @@ def seed_database():
     )
 
     insert_customers = text("""
-        INSERT INTO Customers (
-            first_name,
-            last_name,
-            email,
-            phone_number,
-            date_of_birth,
-            gender,
-            account_number,
-            wallet_balance,
-            account_status,
-            created_at
-        )
-        VALUES (
-            :first_name,
-            :last_name,
-            :email,
-            :phone_number,
-            :date_of_birth,
-            :gender,
-            :account_number,
-            :wallet_balance,
-            :account_status,
-            :created_at
-        )
+    INSERT INTO Customers (
+        first_name, last_name, email, phone_number, date_of_birth,
+        gender, account_number, wallet_balance, account_status, created_at
+    )
+    SELECT
+        :first_name, :last_name, :email, :phone_number, :date_of_birth,
+        :gender, :account_number, :wallet_balance, :account_status, :created_at
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM Customers
+        WHERE account_number = :account_number
+    )
     """)
 
+
     insert_merchants = text("""
-        INSERT INTO Merchants (
-            merchant_name,
-            category,
-            email,
-            phone_number,
-            city,
-            state,
-            account_number,
-            merchant_status,
-            created_at
-        )
-        VALUES (
-            :merchant_name,
-            :category,
-            :email,
-            :phone_number,
-            :city,
-            :state,
-            :account_number,
-            :merchant_status,
-            :created_at
+    INSERT INTO Merchants (
+        merchant_name, category, email, phone_number, city, state,
+        account_number, merchant_status, created_at
+    )
+    SELECT
+        :merchant_name, :category, :email, :phone_number, :city, :state,
+        :account_number, :merchant_status, :created_at
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM Merchants
+        WHERE account_number = :account_number
         )
     """)
 
@@ -606,9 +591,18 @@ def seed_database():
         customer_ids = get_customer_ids(conn=conn)
         merchant_ids = get_merchant_ids(conn=conn)
 
+        existing_reference_numbers = set(
+            conn.execute(text("""
+        SELECT reference_number
+        FROM Transactions
+        """)).scalars().all()
+        )
+
+
         transactions = generate_transactions(
             customer_ids,
-            merchant_ids
+            merchant_ids,
+            existing_reference_numbers=existing_reference_numbers
         )
         logger.info(
             "Generated %d transactions",
@@ -617,7 +611,7 @@ def seed_database():
 
         logger.info("Inserting %d transactions", len(transactions))
         conn.execute(insert_transactions, transactions)
-        
+
     logger.info("NovaPay database seeded successfully")
 
 

@@ -10,22 +10,22 @@ logger = logging.getLogger(__name__)
 DOMAIN_CONFIG = {
     "customer": {
         "table": "Customers",
-        "created_at_column": "created_at"
+        "id_column": "customer_id"
     },
     "merchant": {
         "table": "Merchants",
-        "created_at_column": "created_at"
+        "id_column": "merchant_id"
     },
     "transaction": {
         "table": "Transactions",
-        "created_at_column": "created_at"
+        "id_column": "transaction_id"
     }
 }
 def generic_incremental_loader(transformed_data, domain, schema):
     
     config = DOMAIN_CONFIG[domain]
     table_name = config["table"]
-    created_at = config["created_at_column"]
+    id_column = config["id_column"]
     logger.info(
         f"{table_name} transformation completed. Records received: %d",
         len(transformed_data)
@@ -34,26 +34,26 @@ def generic_incremental_loader(transformed_data, domain, schema):
     logger.info("Analytics database engine created successfully")
 
     with engine.begin() as conn:
-        logger.info(f"Fetching maximum {created_at}  from {table_name}")
+        logger.info(f"Fetching maximum {id_column}  from {table_name}")
         result = conn.execute(
                 text(f"""
-                    select max({created_at})
+                    select max({id_column})
                     from {schema}{table_name}
         """))
-        max_created_at = result.scalar()
+        max_id= result.scalar()
         logger.info(
-            f"Maximum existing {domain} created_at retrieved: %s",
-            max_created_at
+            f"Maximum existing {domain} {id_column} retrieved: %s",
+            max_id
         )
         new_list = []
 
         for record in transformed_data:
-            record_created_at = record.get(created_at)
-            if max_created_at is None or record_created_at > max_created_at:
+            record_id_column = record.get(id_column)
+            if max_id is None or record_id_column > max_id:
                 new_list.append(record)
                 logger.info(
-                    f"New {domain} identified with created_at: %s",
-                    record_created_at
+                    f"New {domain} identified with {id_column}: %s",
+                    record_id_column
                 )
         logger.info(
             f"New {domain} identification completed. New {table_name} found: %d",

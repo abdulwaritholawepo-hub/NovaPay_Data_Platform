@@ -65,31 +65,29 @@ def date_batch_loader():
         date_field = []
         date= dt.datetime.fromisoformat(str(date))
          
-        full_date = dt.date.strftime(date, "%Y-%m-%d")
+        full_date = dt.datetime.strftime(date, "%Y-%m-%d")
         date_field.append(full_date)
-        day_number = dt.date.strftime(date,"%d")
+        day_number = dt.datetime.strftime(date,"%d")
         date_field.append(day_number)
-        day_name = dt.date.strftime(date, "%A")
+        day_name = dt.datetime.strftime(date, "%A")
         date_field.append(day_name)
-        day_of_week = dt.date.isoweekday(date)
+        day_of_week = dt.datetime.isoweekday(date)
         date_field.append(day_of_week)
-        week_of_year = dt.date.isocalendar(date).week
+        week_of_year = dt.datetime.isocalendar(date).week
         date_field.append(week_of_year)
-        month_number = dt.date.strftime(date, "%m")
+        month_number = dt.datetime.strftime(date, "%m")
         date_field.append(month_number)
-        month_name = dt.date.strftime(date, "%B")
+        month_name = dt.datetime.strftime(date, "%B")
         date_field.append(month_name)
         quarter_number = (date.month - 1) // 3+1
         date_field.append(quarter_number)
         quarter_name = f"Q{quarter_number}"
         date_field.append(quarter_name)
-        year = dt.date.strftime(date, "%Y")
+        year = dt.datetime.strftime(date, "%Y")
         date_field.append(year) 
 
         field_list.append(date_field)
         
-    
-    
     dict_insert_list = []
     with engine.begin() as conn:
         results= conn.execute(text("""
@@ -100,7 +98,7 @@ def date_batch_loader():
     
     for insert_data in field_list:
         
-        if dt.date.fromisoformat(str(insert_data[0])) not in results:
+        if dt.datetime.fromisoformat(str(insert_data[0])) not in results:
             dict_insert = { 
                     column_order: insert
                     for insert, column_order in it.zip_longest(insert_data, date_column_order)

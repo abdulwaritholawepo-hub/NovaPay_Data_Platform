@@ -91,11 +91,6 @@ END
         """))
 
 with engine.begin() as conn:
-     conn.execute(text("""
-        DROP TABLE IF EXISTS gold.dim_date
-     """))
-     print("dim date dropped")
-with engine.begin() as conn:
     conn.execute(
         text("""
         IF OBJECT_ID('gold.dim_date', 'U') IS NULL
