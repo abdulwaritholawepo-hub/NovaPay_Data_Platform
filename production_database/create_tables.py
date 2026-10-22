@@ -79,10 +79,42 @@ with engine.begin() as conn:
              )
              END
              """)
-    )
+                    )
     logger.info("Transactions table checked/created successfully")
+    conn.execute(text("""
+        IF OBJECT_ID('dbo.CustomerChangeEvents', 'U') IS NULL
+        BEGIN
+        CREATE TABLE CustomerChangeEvents(
+        event_id bigint primary key identity(1,1) not null,
+        customer_id int not null,
+        event_type varchar(30) not null,
+        effective_at datetime2(7) not null,
+        event_sequence bigint not null check(event_sequence > 0),
+        first_name varchar(50) not null,
+        last_name varchar(50) not null,
+        gender varchar(10) not null,
+        date_of_birth date not null,
+        phone_number varchar(20) not null,
+        email varchar(100) not null,
+        account_number varchar(20) null
+        wallet_balance decimal(18,2) not null check(wallet_balance >= 0),
+        account_status varchar(20) null,
+        created_at datetime2 not null,
+        recorded_at datetime2(7) not null default sysdatetime(),
+        processed_at datetime2(7) null,
+        CONSTRAINT UQ_CustomerChangeEvents_Customer_Sequence
+                UNIQUE (customer_id, event_sequence),
+
+        constraint fk_customer_id foreign key (customer_id)
+        references dbo.Customers(customer_id)
+        )
+        END
+    """))
+    logger.info("CustomerChangeEvents table checked/created successfully")
 
 logger.info(
     "Production database table setup completed successfully. "
-    "Customers, merchants, and transactions tables checked/created."
+    "Customers, merchants, transactions tables and CustomerChangeEvents checked/created."
 )
+
+

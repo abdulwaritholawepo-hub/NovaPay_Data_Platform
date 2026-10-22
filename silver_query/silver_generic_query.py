@@ -7,12 +7,10 @@ engine = analytics_database_engine_connection()
 
 def generic_silver_query(table_name):
     with engine.begin() as conn:
-       result_list = []
        result = conn.execute(text(f"""
         SELECT *
         FROM dbo.{table_name}
+        
         """)).mappings().all()
-    
-       
         
     return result

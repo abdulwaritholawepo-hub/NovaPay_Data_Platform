@@ -8,3 +8,4 @@ def gold_customer_incremental_load():
     return gold_generic_incremental_loader(transformed_data=customers,
                                domain="customer",
                                schema='gold.')
+gold_customer_incremental_load()

@@ -8,9 +8,8 @@ from datetime import datetime
 from sqlalchemy import text
 
 from config import logging_config
-from production_database.production_DB_connection import (
-    production_database_engine_connection
-)
+from production_database.production_DB_connection import production_database_engine_connection
+
 from production_database.id_query_functions import get_customer_ids, get_merchant_ids
 
 logger = logging.getLogger(__name__)

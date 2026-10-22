@@ -59,10 +59,12 @@ def gold_generic_incremental_loader(transformed_data, domain, schema):
             record_created_at = record.get(created_at)
             if max_created_at is None or record_created_at > max_created_at:
                 new_list.append(record)
+            
                 logger.info(
                     f"New {domain} identified with created_at: %s",
                     record_created_at
                 )
+                
         logger.info(
             f"New {domain} identification completed. New {table_name} found: %d",
             len(new_list)
