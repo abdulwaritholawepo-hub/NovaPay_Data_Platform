@@ -2,7 +2,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from extract.transaction_response_validator import transaction_response_validator
+from extract_response_validator.transaction_response_validator import transaction_response_validator
 from transform.transaction_transformer_helper import( 
     TRANSACTION_COLUMN_ORDER, cleaning_transactions_value,
     INVALID_VALUES,

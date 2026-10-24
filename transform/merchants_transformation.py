@@ -1,7 +1,7 @@
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from extract.merchants_response_validator import merchants_response_validator
+from extract_response_validator.merchants_response_validator import merchants_response_validator
 from transform.merchant_transformer_helper import (
     MERCHANT_COLUMN_ORDER,
     INVALID_MERCHANT_ID,

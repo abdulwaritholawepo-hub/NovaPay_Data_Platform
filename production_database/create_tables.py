@@ -96,7 +96,7 @@ with engine.begin() as conn:
         date_of_birth date not null,
         phone_number varchar(20) not null,
         email varchar(100) not null,
-        account_number varchar(20) null
+        account_number varchar(20) null,
         wallet_balance decimal(18,2) not null check(wallet_balance >= 0),
         account_status varchar(20) null,
         created_at datetime2 not null,

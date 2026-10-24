@@ -16,7 +16,7 @@ from transform.customer_transformer_helper import (
     INVALID_ACCOUNT_NUMBER
 
 )
-from extract.customer_response_validator import customer_response_validator
+from extract_response_validator.customer_response_validator import customer_response_validator
 import logging
 from config import logging_config
 
