@@ -150,3 +150,18 @@ BEGIN
 )
 END
         """))
+
+
+with engine.begin() as conn:
+     conn.execute(
+          text("""
+            IF OBJECT_ID ('gold.customer_baseline_checkpoint', 'U') IS NULL
+        BEGIN
+            CREATE TABLE gold.customer_baseline_checkpoint(
+            customer_id int primary key,
+            baseline_event_sequence bigint not null check(baseline_event_sequence >= 0),
+            baseline_run_id UNIQUEIDENTIFIER not null,
+            captured_at datetime2 not null
+            )
+        END
+          """))

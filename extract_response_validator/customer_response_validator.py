@@ -9,7 +9,12 @@ customer_required_fields = ["customer_id", "first_name", "last_name",
                             "gender", "wallet_balance", "account_number",
                             "account_status",]
 
-def customer_response_validator():
-    return validate_extracts(extracts=extract_customers(), 
-                             domain='customer',
-                             required_fields=customer_required_fields)
+def customer_response_validator(data= None):
+    if  data is None:
+        return validate_extracts(extracts=extract_customers(), 
+                                domain='customer',
+                                required_fields=customer_required_fields)
+    else:
+        return validate_extracts(extracts=data, 
+                                domain='customer',
+                                required_fields=customer_required_fields)

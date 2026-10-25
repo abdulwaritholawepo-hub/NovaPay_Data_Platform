@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 
-def transform_customers():
+def transform_customers(customer_data=None):
     logger.info("START | Customer transformation started")
 
     transform_customers_list = []
@@ -42,7 +42,7 @@ def transform_customers():
     logger.info("VALIDATION | Starting customer response validation")
 
 
-    validated_customers = customer_response_validator()
+    validated_customers = customer_response_validator(data=customer_data)
 
     logger.info(
         "VALIDATION | Customer response validation completed | records=%d",
