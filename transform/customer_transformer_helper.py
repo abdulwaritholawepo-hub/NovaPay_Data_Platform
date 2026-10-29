@@ -162,6 +162,8 @@ def clean_account_status(val):
         return "Active"
     elif val in {"inactive", "disabled"}:
         return "Inactive"
+    elif val in {"closed"}:
+        return "Closed"
     else:
         return "Unknown"
 
