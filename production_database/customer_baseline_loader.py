@@ -16,54 +16,6 @@ production_engine = production_database_engine_connection()
 analytics_engine = analytics_database_engine_connection()
 
 
-def get_customer_baseline_snapshot():
-    logger.info("START | Customer baseline snapshot retrieval started")
-
-    with production_engine.connect() as connection:
-        connection.execute(
-            text("SET TRANSACTION ISOLATION LEVEL SNAPSHOT")
-        )
-        connection.commit()
-
-        with connection.begin():
-            customer_snapshot = connection.execute(text("""
-                SELECT
-                    c.customer_id,
-                    CASE
-                        WHEN e.event_sequence IS NULL THEN 0
-                        ELSE e.event_sequence
-                    END AS event_sequence,
-                    c.first_name,
-                    c.last_name,
-                    c.email,
-                    c.phone_number,
-                    c.date_of_birth,
-                    c.gender,
-                    c.account_number,
-                    c.wallet_balance,
-                    c.account_status,
-                    c.created_at
-                FROM dbo.Customers AS c
-                LEFT JOIN (
-                    SELECT
-                        customer_id,
-                        MAX(event_sequence) AS event_sequence
-                    FROM dbo.CustomerChangeEvents
-                    GROUP BY customer_id
-                ) AS e
-                    ON c.customer_id = e.customer_id
-            """)).mappings().all()
-
-    customer_snapshot_list = [
-        dict(customer) for customer in customer_snapshot
-    ]
-
-    logger.info(
-        "SUCCESS | Customer baseline snapshot retrieved | records=%d",
-        len(customer_snapshot_list)
-    )
-
-    return customer_snapshot_list
 
 
 def prepare_customer_baseline_records(customer_snapshot_list):
@@ -301,6 +253,149 @@ def validate_customer_dimension_schema(dimension_records):
     )
 
     return True
+
+from sqlalchemy import text
+from analytics_database.analytics_DB_connection import (
+    analytics_database_engine_connection,
+)
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+def finalize_customer_baseline(
+    baseline_run_id,
+    expected_customer_count,
+):
+    engine = analytics_database_engine_connection()
+
+    with engine.begin() as conn:
+
+        # 1. Verify that this baseline run exists and is in progress.
+        run = conn.execute(
+            text("""
+                SELECT
+                    status,
+                    expected_customer_count
+                FROM gold.customer_baseline_run WITH (UPDLOCK, HOLDLOCK)
+                WHERE baseline_run_id = :baseline_run_id
+            """),
+            {"baseline_run_id": baseline_run_id},
+        ).mappings().one_or_none()
+
+        if run is None:
+            raise ValueError(
+                f"Baseline run {baseline_run_id} does not exist."
+            )
+
+        if run["status"] != "IN_PROGRESS":
+            raise ValueError(
+                f"Cannot finalize baseline run with status "
+                f"{run['status']}."
+            )
+
+        if run["expected_customer_count"] != expected_customer_count:
+            raise ValueError(
+                "The supplied expected customer count does not match "
+                "the count recorded for this baseline run."
+            )
+
+        # 2. Verify the number of dimension records for this baseline.
+        # This assumes the baseline's customer IDs can be identified
+        # using its checkpoint records.
+        dimension_count = conn.execute(
+            text("""
+                SELECT COUNT(*)
+                FROM gold.dim_customer AS dc
+                INNER JOIN gold.customer_baseline_checkpoint AS cp
+                    ON cp.customer_id = dc.customer_id
+                WHERE cp.baseline_run_id = :baseline_run_id
+                  AND dc.is_current = 1
+            """),
+            {"baseline_run_id": baseline_run_id},
+        ).scalar_one()
+
+        checkpoint_count = conn.execute(
+            text("""
+                SELECT COUNT(*)
+                FROM gold.customer_baseline_checkpoint
+                WHERE baseline_run_id = :baseline_run_id
+            """),
+            {"baseline_run_id": baseline_run_id},
+        ).scalar_one()
+
+        if (
+            dimension_count != expected_customer_count
+            or checkpoint_count != expected_customer_count
+        ):
+            raise ValueError(
+                "Baseline validation failed. "
+                f"Expected {expected_customer_count} customers; "
+                f"found {dimension_count} matching dimension records "
+                f"and {checkpoint_count} checkpoints."
+            )
+
+        # 3. Mark the run as completed.
+        conn.execute(
+            text("""
+                UPDATE gold.customer_baseline_run
+                SET
+                    status = 'COMPLETED',
+                    completed_at = SYSUTCDATETIME(),
+                    loaded_customer_count = :loaded_customer_count
+                WHERE baseline_run_id = :baseline_run_id
+                  AND status = 'IN_PROGRESS'
+            """),
+            {
+                "baseline_run_id": baseline_run_id,
+                "loaded_customer_count": dimension_count,
+            },
+        )
+
+        # 4. Set the authoritative baseline reference.
+        conn.execute(
+            text("""
+                UPDATE gold.customer_baseline_control
+                SET
+                    active_baseline_run_id = :baseline_run_id,
+                    updated_at = SYSUTCDATETIME()
+                WHERE control_id = 1
+            """),
+            {"baseline_run_id": baseline_run_id},
+        )
+
+        # Insert the initial control row if one does not exist.
+        conn.execute(
+            text("""
+                IF NOT EXISTS (
+                    SELECT 1
+                    FROM gold.customer_baseline_control
+                    WHERE control_id = 1
+                )
+                BEGIN
+                    INSERT INTO gold.customer_baseline_control
+                    (
+                        control_id,
+                        active_baseline_run_id,
+                        updated_at
+                    )
+                    VALUES
+                    (
+                        1,
+                        :baseline_run_id,
+                        SYSUTCDATETIME()
+                    )
+                END
+            """),
+            {"baseline_run_id": baseline_run_id},
+        )
+
+        logger.info(
+            "Customer baseline run %s finalized successfully. "
+            "Customers loaded: %s",
+            baseline_run_id,
+            dimension_count,
+        )
 
 if __name__ == "__main__":
     snapshot = get_customer_baseline_snapshot()

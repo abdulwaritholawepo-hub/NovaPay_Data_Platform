@@ -151,6 +151,46 @@ BEGIN
 END
         """))
 
+with engine.begin() as conn:
+    conn.execute(
+    text("""
+        IF OBJECT_ID ('gold.customer_baseline_run', 'U') IS NULL
+    BEGIN 
+        CREATE TABLE gold.customer_baseline_run(
+        baseline_run_id UNIQUEIDENTIFIER primary key,
+        status varchar(20) not null check(status in ('IN_PROGRESS', 'COMPLETED', 'FAILED')),
+        started_at datetime2 not null,
+        completed_at datetime2 null,
+        failed_at  datetime2 null,
+        failure_reason varchar(2000) null,
+        expected_customer_count int null check( expected_customer_count >= 0),
+        loaded_customer_count int check(loaded_customer_count >=0)
+        )
+    END
+    """))
+
+with engine.begin() as conn:
+     conn.execute(text("""
+          IF OBJECT_ID('gold.customer_baseline_control', 'U') IS NULL
+BEGIN
+    CREATE TABLE gold.customer_baseline_control
+    (
+        control_id TINYINT NOT NULL
+            CONSTRAINT PK_customer_baseline_control PRIMARY KEY,
+
+        active_baseline_run_id UNIQUEIDENTIFIER NOT NULL,
+
+        updated_at DATETIME2 NOT NULL,
+
+        CONSTRAINT FK_customer_baseline_control_run
+            FOREIGN KEY (active_baseline_run_id)
+            REFERENCES gold.customer_baseline_run(baseline_run_id),
+
+        CONSTRAINT CK_customer_baseline_control_single_row
+            CHECK (control_id = 1)
+    )
+END
+          """))
 
 with engine.begin() as conn:
      conn.execute(
@@ -158,10 +198,12 @@ with engine.begin() as conn:
             IF OBJECT_ID ('gold.customer_baseline_checkpoint', 'U') IS NULL
         BEGIN
             CREATE TABLE gold.customer_baseline_checkpoint(
-            customer_id int primary key,
+            baseline_run_id UNIQUEIDENTIFIER not null REFERENCES gold.customer_baseline_run(baseline_run_id),
+            customer_id int not null ,
             baseline_event_sequence bigint not null check(baseline_event_sequence >= 0),
-            baseline_run_id UNIQUEIDENTIFIER not null,
-            captured_at datetime2 not null
+            captured_at datetime2 not null,
+            CONSTRAINT PK_customer_baseline_checkpoint
+            PRIMARY KEY (baseline_run_id, customer_id)
             )
         END
           """))
