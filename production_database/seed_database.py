@@ -11,7 +11,7 @@ from config import logging_config
 from production_database.production_DB_connection import production_database_engine_connection
 
 from production_database.id_query_functions import get_customer_ids, get_merchant_ids
-
+from production_database.customer_creation import create_customer
 logger = logging.getLogger(__name__)
 
 
@@ -512,21 +512,6 @@ def seed_database():
         len(merchants)
     )
 
-    insert_customers = text("""
-    INSERT INTO Customers (
-        first_name, last_name, email, phone_number, date_of_birth,
-        gender, account_number, wallet_balance, account_status, created_at
-    )
-    SELECT
-        :first_name, :last_name, :email, :phone_number, :date_of_birth,
-        :gender, :account_number, :wallet_balance, :account_status, :created_at
-    WHERE NOT EXISTS (
-        SELECT 1
-        FROM Customers
-        WHERE account_number = :account_number
-    )
-    """)
-
 
     insert_merchants = text("""
     INSERT INTO Merchants (
@@ -579,9 +564,10 @@ def seed_database():
     logger.info("Production database engine created successfully")
 
     with engine.begin() as conn:
-        
         logger.info("Inserting %d customers", len(customers))
-        conn.execute(insert_customers, customers)
+        for customer in customers:
+            
+            create_customer(conn=conn, customer_data=customer)
 
         logger.info("Inserting %d merchants", len(merchants))
         conn.execute(insert_merchants, merchants)
