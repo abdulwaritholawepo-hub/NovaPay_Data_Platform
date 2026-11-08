@@ -1,6 +1,5 @@
  
 from sqlalchemy import create_engine, text
-import pyodbc
 from urllib.parse import quote_plus
 def production_database_engine_connection():
     connection_string = quote_plus(
