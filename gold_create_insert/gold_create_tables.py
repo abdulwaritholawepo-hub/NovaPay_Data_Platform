@@ -207,3 +207,21 @@ with engine.begin() as conn:
             )
         END
           """))
+
+with engine.begin() as conn:
+     conn.execute(
+          text("""
+                IF OBJECT_ID ('gold.customer_incremental_checkpoint', 'U') IS NULL
+            BEGIN
+            CREATE TABLE gold.customer_incremental_checkpoint(
+                customer_id int primary key,
+                last_event_sequence bigint not null check(last_event_sequence >= 0),
+                updated_at datetime2(7) not null default sysutcdatetime()
+            
+            )
+            END
+
+          """
+               
+          )
+     )
