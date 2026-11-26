@@ -1,4 +1,5 @@
 from datetime import datetime, date
+import math
 
 INVALID_AGE = "Invalid Age"
 INVALID_CUSTOMER_ID = "Invalid customer ID"
@@ -39,20 +40,20 @@ COLUMN_ORDER = [
 ]
 
 def clean_transform_value(key, val, missing_values):
-
-
+    if val is None:
+        return None
+    if isinstance(val,str):
+        val = val.strip()
+        if val in missing_values:
+            return None
     if key == "customer_id":
-     return clean_customer_id(val=val)
+        return clean_customer_id(val=val)
 
     if key == "wallet_balance":
         return clean_wallet_balance(val=val)
 
 
     if isinstance(val, str):
-        val = val.strip()
-
-        if val in missing_values:
-            return None
 
         if key == "account_number" and val:
             return clean_account_number(val=val)
@@ -96,9 +97,10 @@ def clean_customer_id(val):
 
 
 def clean_wallet_balance(val):
-
-
     if val is None:
+        return None
+    
+    if isinstance(val, bool):
         return None
 
     if isinstance(val, str):
@@ -107,12 +109,9 @@ def clean_wallet_balance(val):
         val = float(val)
     except (ValueError, TypeError):
         return None
-
-    if isinstance(val, bool):
+    if not math.isfinite(val):
         return None
 
-    if isinstance(val, (int, float)):
-        val = float(val)
     if val < 0:
         return None
 
@@ -139,9 +138,9 @@ def clean_account_number(val):
 
 
 def clean_email(val):
-
-
     val = val.lower()
+    if any(char.isspace() for char in val):
+        return INVALID_EMAIL_ADDRESS
     if val.count(gmail_separator) != 1:
         return INVALID_EMAIL_ADDRESS
 
@@ -151,7 +150,11 @@ def clean_email(val):
         return INVALID_EMAIL_ADDRESS
     if "." not in domain:
         return INVALID_EMAIL_ADDRESS
-
+    first_text, separator, second_text = domain.partition(".")
+    if not first_text:
+        return INVALID_EMAIL_ADDRESS
+    if not second_text:
+        return INVALID_EMAIL_ADDRESS
     return val
 
 
@@ -217,17 +220,37 @@ def clean_created_at_and_date_of_birth(val, key):
     return val
 
 
-def calculate_age(date_of_birth):
+def calculate_age(date_of_birth,reference_date=None):
 
     if date_of_birth is None:
         return INVALID_AGE
+    elif isinstance(date_of_birth,datetime):
+        date_of_birth = date_of_birth.date()
+    elif isinstance(date_of_birth,date):
+        pass
+    else:
+        return INVALID_AGE
+    if reference_date is None:
+        today = date.today()
+        age = today.year - date_of_birth.year
+        
+        if (date_of_birth.month, date_of_birth.day) > (today.month, today.day):
+            age -= 1
+    elif isinstance(reference_date,datetime):
 
-    today = date.today()
+        reference_date = reference_date.date()
+        age = reference_date.year - date_of_birth.year
+        
+        if (date_of_birth.month, date_of_birth.day) > (reference_date.month, reference_date.day):
+            age -= 1
+        
+    elif isinstance(reference_date,date):
+        age = reference_date.year - date_of_birth.year
 
-    age = today.year - date_of_birth.year
-
-    if (date_of_birth.month, date_of_birth.day) > (today.month, today.day):
-        age -= 1
+        if (date_of_birth.month, date_of_birth.day) > (reference_date.month, reference_date.day):
+            age -= 1
+    else:
+        raise TypeError("wrong datatype")
 
     if age < 0 or age > 120:
         return INVALID_AGE
@@ -236,8 +259,11 @@ def calculate_age(date_of_birth):
 
 
 def get_customer_segment(age):
-
-    if 0 <= age <= 17:
+    if age is None:
+        return "Unknown"
+    elif age < 0:
+        return "Unknown"
+    elif 0 <= age <= 17:
         return "Minor"
 
     elif 18 <= age <= 25:
@@ -250,21 +276,41 @@ def get_customer_segment(age):
         return "Middle Aged"
     elif 61 <= age <= 120:
         return "Senior"
+    elif age > 120:
+        return "Unknown"
     else:
         return "Unknown"
 
 
-def calculate_account_tenure(created_at, date_of_birth):
-
+def calculate_account_tenure(created_at, date_of_birth, reference_date=None):
     if not created_at:
         return None, "Unknown"
 
-    if (date_of_birth is not None) and (created_at.date() < date_of_birth or created_at.date() > date.today()):
-
+    if not isinstance(created_at, datetime):
         return INVALID_ACCOUNT_DATE, "Unknown"
 
-    account_tenure_days = (date.today() - created_at.date()).days
+    if date_of_birth is not None and (
+        not isinstance(date_of_birth, date) or isinstance(
+            date_of_birth, datetime)
+    ):
+        return INVALID_ACCOUNT_DATE, "Unknown"
+    if reference_date is None:
+        reference_date = date.today()
+    elif isinstance(reference_date, datetime):
+        reference_date = reference_date.date()
+    elif isinstance(reference_date,date):
+        pass
+    else:
+        raise TypeError("wrong data type")
+    
+    if date_of_birth is not None and created_at.date() < date_of_birth:
+        return INVALID_ACCOUNT_DATE, "Unknown"
 
+    if created_at.date() > reference_date:
+        return INVALID_ACCOUNT_DATE, "Unknown"
+
+    account_tenure_days = (reference_date - created_at.date()).days
+    
     if 0 <= account_tenure_days <= 30:
         customer_lifetime_stage = "New Customer"
     elif 31 <= account_tenure_days <= 180:
@@ -278,7 +324,6 @@ def calculate_account_tenure(created_at, date_of_birth):
     else:
         customer_lifetime_stage = INVALID_ACCOUNT_DATE
     return account_tenure_days, customer_lifetime_stage
-
 
 def get_wallet_segment(wallet_balance):
 
@@ -314,14 +359,18 @@ def get_risk_details(account_status, wallet_balance):
 
         elif account_status == "Active" and wallet_balance <= 500_000:
             risk_level = "Medium"
-
-        else:
+        elif account_status == "Active" and wallet_balance > 500_000:
             risk_level = "Low"
+        
+        else:
+            risk_level = "Unknown"
 
         if risk_level in ("Very High", "High"):
             risk_flag = "Review Required"
-        else:
+        elif risk_level in ("Medium","Low"):
             risk_flag = "Normal"
+        else:
+            risk_flag = "Unknown"
 
     return risk_level, risk_flag
 
@@ -343,13 +392,11 @@ def get_customer_initials(first_name, last_name):
     return (first_name[0] + last_name[0]).upper()
 
 
-def get_customer_age_details(date_of_birth):
+def get_customer_age_details(date_of_birth, reference_date=None):
 
-    if not date_of_birth:
+    if date_of_birth is None:
         return "Unknown", None, "Not Eligible", "Unknown"
-
-    age = calculate_age(date_of_birth)
-
+    age = calculate_age(date_of_birth, reference_date)
     if age == INVALID_AGE:
         return age, None, "Not Eligible", "Unknown"
 

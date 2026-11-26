@@ -22,8 +22,6 @@ from config import logging_config
 
 logger = logging.getLogger(__name__)
 
-
-
 def transform_customers(customer_data=None):
     logger.info("START | Customer transformation started")
 
